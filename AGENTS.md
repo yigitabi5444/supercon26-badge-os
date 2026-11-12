@@ -15,6 +15,7 @@
   - `app-badge`: `apps/badge/`
   - `app-settings`: `apps/settings/`
   - `app-weather`: `apps/weather/`
+  - `idfport`: `apps/codex_board/`, `tools/codex_board/` (contributed in PR #5)
   - `sao-cricket`: `components/cricket/` (Noisy Cricket SAO as the speaker: its firmware, an SWD flasher, I2C sound)
   - `idfport` (OS maintainer): `apps/life/`, `apps/source/`, `apps/video/`, `apps/clock/` (contributed in pull
     request #2)

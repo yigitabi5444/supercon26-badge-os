@@ -35,6 +35,7 @@ Apps take over the badge; hold MENU + and MENU - together to get back home.
 | Video | A 15 s clip at 4 frames/s, to show off the panel |
 | Weather | Current weather and a 5-day forecast (Open-Meteo) for a saved city or coordinates |
 | Settings | Opens a Wi-Fi hotspot "Badge-XXXX" (password `supercon`) with a settings page: username, Wi-Fi, Badge text or picture, weather place and units |
+| Codex Board | Desk display for Codex terminal sessions: working, reply ready, needs input, quota; red LEDs on attention. Feed from `tools/codex_board` over USB or Wi-Fi ([apps/codex_board/README.md](apps/codex_board/README.md)) |
 | Doom | The shareware episode, downloaded once into flash |
 
 ## Controls

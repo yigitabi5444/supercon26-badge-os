@@ -6,7 +6,6 @@ extern const app_t app_badge, app_clock, app_update, app_pong, app_snake, app_li
 
 const app_t *const apps[] = {
     &app_badge, // the name tag first: what a badge is for
-    &app_codex_board,
     &app_clock,
     &app_update,
     &app_pong,
@@ -22,5 +21,6 @@ const app_t *const apps[] = {
     &app_weather,
     &app_settings,
     &app_doom,
+    &app_codex_board,
 };
 const int napps = sizeof apps / sizeof *apps;

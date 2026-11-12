@@ -10,6 +10,7 @@
 //   "wx_place"    Weather: the looked-up "Name, Country" for display
 //   "wx_unit"     "F" = Fahrenheit and mph; anything else or unset = Celsius and km/h
 //   "snd_sao"     sound port without a Cricket: "1"-"3", "0" = none; unset = SAO2 (badge/sound.h)
+//   "cb_url"      Codex Board: http:// feed URL; empty = the feed comes over USB
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
