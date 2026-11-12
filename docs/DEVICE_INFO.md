@@ -72,8 +72,8 @@ GPIO45 is listed as MISO in the stock driver but is not connected; it is a strap
 - The CoG's high voltages come from an external booster (Q1, L1 47 uH, D2) driven by the master CoG (NGDRV).
 - Two 1-bit RAM planes per CoG: black/white (index 0x10) and red (0x11). A pixel picks a waveform table by
   `(red << 1) | bw`: 0 white, 1 black, 2 red, 3 unused (both bits set: nothing drives it in the stock tables).
-- On the wire: per row 60 bytes to the left CoG and 60 to the right, every byte bit-reversed (this "B1" panel;
-  the older "084" variant is not reversed). badge os keeps planes MSB-left and reverses while sending.
+- On the wire: per row 60 bytes to the left CoG and 60 to the right, every byte bit-reversed on the B1 (not on the
+  84). badge os keeps planes MSB-left and reverses while sending.
 - SPI mode 0, 20 MHz (PDi's maximum for this CoG family). One ESP32-S3 SPI transaction carries at most 32 KB: send
   in pieces with CS held low.
 
@@ -91,8 +91,8 @@ GPIO45 is listed as MISO in the stock driver but is not connected; it is a strap
   table is 40 frames = 949 ms. Doubling every count doubles the pull (1898 ms).
 - **Never use a frame count of 0.** It hangs the CoG with BUSY low (seen for 180 s); only a reset recovers it.
   So 40 frames (~0.95 s) is the floor for a full-height pull.
-- A DRFW window narrower in y roughly halves the pull (481-492 ms); a narrower x window changes nothing.
-  DUW (0x13) + RAM_RW (0x12) window writes work, so a small change costs a few bytes of SPI instead of 4 x 40 KB.
+- A DRFW window narrower in y roughly halves the pull (481-492 ms) but copies rows down the panel; a narrower x
+  window changes nothing. DUW (0x13) + RAM_RW (0x12) window writes work.
 - Session open (reset, `0x70`, planes, register sequence, `0xB0`, DC-DC soft start): 2443 ms with the PDi GU_large
   waits, **348 ms with the quick waits** (reset 2/4/20 ms, `0x05 7D` 50 ms, `0x05 00` 1 ms, load strobes 2/10 ms,
   `0xB0` 10 ms after the last strobe). badge os only uses the quick waits. Close (DC-DC soft shutdown): ~0.2 s.
@@ -120,10 +120,10 @@ GPIO45 is listed as MISO in the stock driver but is not connected; it is a strap
 - Never send a command while BUSY is low; always end with the DC-DC soft shutdown (`0x09 7F`, `0x05 7D`, `0x09 00`).
 - Do not cut power or reset in the middle of a refresh unless something is physically wrong.
 - Do not drive the panel bus pins while the panel supply (GPIO48 / Q2) is off: it backfeeds the CoG through its
-  ESD diodes, and the badge team broke a panel that way. All firmware so far leaves GPIO48 alone (panel on).
+  ESD diodes, and the badge team broke a panel that way. badge os holds GPIO48 low (panel on) from boot.
 - Only GND / VDH / VDL / VDHR levels from the known tables; no level held for long; balanced shakes.
-- Frames open a fresh session every 60 pulls (sessions of 60 are proven on the badge; the badge team used 20 for its
-  fast frames, reason not documented).
+- Frames open a fresh session every 60 pulls on the B1 (sessions of 60 are proven on the badge) and every 20 on the
+  84 (the badge team's number, reason not documented).
 
 ## Sound
 - No speaker on the badge. A Noisy Cricket SAO with the speaker firmware plays the sound when one is plugged in

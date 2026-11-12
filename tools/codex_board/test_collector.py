@@ -7,7 +7,7 @@ from unittest.mock import patch
 from collector import finish_notifications, main, report_status_changes, tmux_rows
 from model import AttentionTracker, quota_windows, timezone, title_status
 from usb_feed import snapshot
-from alert_test import test_feed
+from alert_test import phase_feed
 
 
 class CollectorTests(unittest.TestCase):
@@ -214,16 +214,16 @@ class CollectorTests(unittest.TestCase):
 
     def test_timed_alert_frames_are_fresh_and_repeat_same_event(self):
         zone = timezone('UTC')
-        first = test_feed('First alert', 'a' * 32, zone, 100)
-        repeat = test_feed('First alert', 'a' * 32, zone, 101)
+        first = phase_feed('First alert', 'a' * 32, zone, 100)
+        repeat = phase_feed('First alert', 'a' * 32, zone, 101)
         self.assertNotEqual(first, repeat)  # Heartbeat timestamp advances.
         self.assertEqual(first.splitlines()[1].split(b'\t')[1],
                          repeat.splitlines()[1].split(b'\t')[1])
         for body in (first, repeat):
             self.assertIn(b'PANE\tled-test\tControlled LED test\tNEEDS_YOU\t' + b'a' * 32, body)
-        clear = test_feed('Clear', '', zone, 102)
+        clear = phase_feed('Clear', '', zone, 102)
         self.assertIn(b'PANE\tled-test\tControlled LED test\tWORKING\t\n', clear)
-        second = test_feed('Second alert', 'b' * 32, zone, 103)
+        second = phase_feed('Second alert', 'b' * 32, zone, 103)
         self.assertIn(b'\tNEEDS_YOU\t' + b'b' * 32, second)
 
 

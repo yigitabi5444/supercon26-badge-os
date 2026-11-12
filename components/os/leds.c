@@ -1,5 +1,4 @@
 // LED bar: 8x WS2812 on GPIO38, RMT at 10 MHz (0: 0.3 us high, 0.9 us low; 1: 0.9 us high, 0.3 us low).
-// The LEDs keep their colours until told otherwise, a reset included: the OS turns them off at boot and back home.
 #include <string.h>
 #include "driver/rmt_tx.h"
 #include "badge/badge.h"
@@ -30,7 +29,7 @@ void leds_init(void)
 
 void leds(const uint8_t rgb[LEDS][3])
 {
-    static uint8_t grb[3 * LEDS]; // what the LEDs show (all off after led_init)
+    static uint8_t grb[3 * LEDS]; // what the LEDs show (all off after leds_init)
     uint8_t out[3 * LEDS];
     for (int i = 0; i < LEDS; i++) {
         uint8_t *o = out + 3 * (LED_FLIP ? LEDS - 1 - i : i);

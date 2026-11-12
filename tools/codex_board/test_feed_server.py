@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from alert_test import test_feed
+from alert_test import phase_feed
 from feed_server import local_feed, make_handler, remote_feed, upstream_url
 from model import timezone
 
@@ -28,7 +28,7 @@ class Connection:
 
 class FeedServerTests(unittest.TestCase):
     def setUp(self):
-        self.body = test_feed('Wi-Fi test', '', timezone('UTC'), 100)
+        self.body = phase_feed('Wi-Fi test', '', timezone('UTC'), 100)
 
     def request(self, method='GET', path='/feed.txt', reader=None):
         connection = Connection(f'{method} {path} HTTP/1.0\r\nHost: badge\r\n\r\n'.encode())

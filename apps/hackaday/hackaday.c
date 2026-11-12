@@ -53,9 +53,12 @@ static int wrap(int x, int y, int scale, int lh, int maxl, const char *s)
     return y;
 }
 
-static void meta(char *o, int n, const post_t *p)
+static void meta(char *o, int n, int i) // "author, date  i/n"
 {
-    snprintf(o, n, "%s%s%s", p->author, *p->author && *p->date ? ", " : "", p->date);
+    const post_t *p = &posts[i];
+    snprintf(o, n - 12, "%s%s%s", p->author, *p->author && *p->date ? ", " : "", p->date);
+    int k = strlen(o);
+    snprintf(o + k, n - k, "  %d/%d", i + 1, nposts);
 }
 
 // The open post laid out as lines: text (s, n at scale), an image (img >= 0) or a gap (neither); h px each.
@@ -78,9 +81,7 @@ static void layout(int i)
     const char *t;
     nl = 0;
     for (const char *s = posts[i].title; *s; s = t) add(s, cut(s, (X1 - X0) / 24, &t), 30, 3, -1);
-    meta(head, sizeof head - 12, &posts[i]);
-    int hn = strlen(head);
-    snprintf(head + hn, sizeof head - hn, "  %d/%d", i + 1, nposts);
+    meta(head, sizeof head, i);
     add(head, strlen(head), 34, 2, -1);
     for (const char *s = posts[i].body ? posts[i].body : ""; *s; s = t) {
         unsigned char c = *s;
@@ -134,9 +135,7 @@ static void draw_card(int i)
         picture(p->cover, TOP, imgs[p->cover].h);
         y = wrap(X0, TOP + imgs[p->cover].h + 8, 2, 20, 2, p->title);
     } else y = wrap(X0, TOP + 48, 4, 40, 6, p->title) + 16;
-    meta(s, sizeof s - 12, p);
-    int n = strlen(s);
-    snprintf(s + n, sizeof s - n, "  %d/%d", i + 1, nposts);
+    meta(s, sizeof s, i);
     text(X0, y, 2, s, true);
     ui_frame(1);
 }

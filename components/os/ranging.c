@@ -32,7 +32,7 @@ static const char *TAG = "os";
 #define RNG_STALE_US 30000000LL // a pair not heard of for 30 s is dropped
 
 // Two ESP-NOW packets on channel 1. BOSR, ~1 s: the sender's SoftAP (where to aim FTM), its latest ranges and its
-// username; v0.8 badges know only this one, so it stays byte for byte as it was. BOSF, ~250 ms, badges after v0.8:
+// username; v0.8 badges know only this one, so its layout never changes. BOSF, ~250 ms, badges after v0.8:
 // the raw results of the sessions the sender finished since its last BOSF, so the badge it measured needs not
 // measure back (half the FTM traffic between updated badges).
 typedef struct __attribute__((packed)) {
@@ -302,6 +302,6 @@ bool ranging_name(const uint8_t mac[6], char name[13])
 void badge_id(char id[5])
 {
     uint8_t mac[6];
-    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+    ranging_me(mac);
     sprintf(id, "%02X%02X", mac[4], mac[5]); // as Radar shows it
 }

@@ -265,7 +265,7 @@ static void run(void)
         xSemaphoreTake(panel, portMAX_DELAY);
         ui_close();
         ms(3000);
-        ui_wipe(); // a fresh session and less ghosting for the next game
+        ui_wipe(); // no ghosts for the next game
         xSemaphoreGive(panel);
     }
 }

@@ -24,7 +24,8 @@ power, flash) is in [DEVICE_INFO.md](DEVICE_INFO.md).
 
 1. NVS: Wi-Fi keeps its calibration there, settings live there. Erased and set up again if it is full or from a newer
    format.
-2. `display_init`: the panel's pins, SPI at 20 MHz, the panel lock, the restart hook.
+2. `display_init`: the panel's pins, which panel (an OTP probe after power-on, logged as `panel: ...`), SPI (B1
+   20 MHz, 84 4 MHz), the panel lock, the restart hook.
 3. `sao_init`: the SAO I2C bus (logs every address that answers), the Cricket, one knob reading in the log.
 4. `buttons_init`: the button task.
 5. `leds_init`: the LED bar off (the LEDs keep their colours through a reset).
@@ -42,26 +43,29 @@ power, flash) is in [DEVICE_INFO.md](DEVICE_INFO.md).
 | ranging | 4 KB | 4 | ESP-NOW beacons and FTM sessions, while ranging runs |
 | apps' own | | | draw tasks, network tasks: any task that calls `ui_frame`, `ui_close` or `ui_wipe` needs 6 KB or more |
 
-There is no panel task: the panel work happens in the task that calls `ui_frame`.
+The panel work runs in the task that calls `ui_frame`, `ui_close` or `ui_wipe`.
 
 ## Display
 `components/os/display.c` keeps the frame buffer `fb` (PSRAM), a copy of what the film shows (`shown`), the panel lock
-and the session state. `epd.c` talks to the panel: two CoGs on one SPI bus, each with its own CS and BUSY.
+and the session state. `epd.c` talks to the panel: two CoGs on one SPI bus, each with its own CS and BUSY. Two panels
+shipped, told apart at power-on: the E2969JS0B1 ("B1", most badges) and the E2969JS084 ("84", path written from the
+badge team's driver, untested here). Numbers below are the B1's unless marked.
 
 A frame (`ui_frame`):
 1. Draw the top bar into rows 0..`TOP`-1 of `fb`.
 2. `fb` equal to `shown`: nothing to do, return.
 3. Wait for the previous frame's pull: BUSY polled every 1 ms tick.
-4. No session open, or 60 pulls in this one: close it and open a fresh one. Opening: reset, the register sequence
-   with the quick waits, the calm transition table into `0xB0`, DC-DC up, `shown` into both RAM planes (~0.4 s).
-5. DUW whole panel, the whole of `fb` into `0x10` of both CoGs (80 KB, 4 KB SPI pieces, ~35 ms), DRFW whole panel
-   (`00 3B 00 A9`, never shorter: a short DRFW copies rows down the panel), trigger (`0x15 3C`).
-6. `shown` = `fb`, return. The pull runs on its own for ~0.24 s.
+4. No session open, or 60 pulls in this one (84: 20): close it and open a fresh one. Opening: reset, the register
+   sequence with the quick waits, the calm transition table into `0xB0`, DC-DC up, `shown` into both RAM planes
+   (~0.4 s; 84 ~1.9 s, planes before the register sequence).
+5. DUW whole panel, the whole of `fb` into `0x10` of both CoGs (80 KB, 4 KB SPI pieces, ~35 ms; 84: `shown` into
+   `0x11` too), DRFW whole panel (never shorter: a short DRFW copies rows down the panel), trigger (`0x15 3C`).
+6. `shown` = `fb`, return. The pull runs on its own for ~0.24 s (84 ~0.29 s).
 
-The CoG keeps the frame it just showed in `0x11` after every pull, and the transition table drives only the pixels
-where `0x10` and `0x11` differ, so nothing else moves and nothing flashes. `0x11` is never written after the session
-opens. So `ui_frame` costs ~35 ms plus whatever is left of the previous pull: ~3.5-4 frames/s, and the app draws the
-next frame while the panel pulls.
+After every pull the B1 keeps the frame it just showed in `0x11`, and the transition table drives only the pixels
+where `0x10` and `0x11` differ, so nothing else moves and nothing flashes. On the B1 `0x11` is never written after
+the session opens (it breaks the calm frames). So `ui_frame` costs ~35 ms plus whatever is left of the previous pull:
+~3.5-4 frames/s on the B1, ~1.6 on the 84, and the app draws the next frame while the panel pulls.
 
 - `ui_close`: waits for the pull, closes the session (DC-DC soft shutdown). For screens that sit still.
 - `ui_wipe`: closes the session, then a session of its own on the badge team's fast table: an all-black frame, an
@@ -101,8 +105,8 @@ next frame while the panel pulls.
 
 ## Back home
 After an app's `run()` returns, `home.c`:
-1. restarts the badge if the app made USB a host (`usb_host_lib_info`): on the home screen the badge must always be
-   flashable over USB;
+1. restarts the badge if the app made USB a host (`usb_host_lib_info`) or installed the USB serial driver: on the home
+   screen the badge must always be flashable over USB, with its log on the console;
 2. stops sound;
 3. gives the radio back to ranging;
 4. turns the LEDs off;
@@ -128,6 +132,6 @@ keep their old table. Online update writes the other OTA slot; a version that do
 is rolled back.
 
 ## Logs
-The OS logs under the tag `os` (session open and close, button presses on the home screen, opening apps, new badges
-in ranging). Apps use their own tags, e.g. `ota`, `rss` (Hackaday), `video`, `clock`, `doom`. The per-frame line
+The OS logs under the tag `os` (which panel, session open and close, button presses on the home screen, opening apps,
+new badges in ranging). Apps use their own tags, e.g. `ota`, `rss` (Hackaday), `video`, `clock`, `doom`. The per-frame line
 (`os`, how long a frame waited and took to send) is at debug level.

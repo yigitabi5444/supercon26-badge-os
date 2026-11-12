@@ -1,4 +1,4 @@
-// Aliens ("Saucer Siege"): a 8 x 5 formation of three kinds of aliens marches side to side, steps down at the edges
+// SpaceInv: an 8 x 5 formation of three kinds of aliens marches side to side, steps down at the edges
 // and speeds up as it thins out. Hold A / B to move the gun left / right, MENU + or MENU - to fire (one shot in the air
 // at a time; holding fires again as soon as it lands). The AS5600 knob add-on moves the gun too: a full turn is the
 // screen width. Three lives; a cleared wave brings a lower, faster one. Game over shows the score for 3 s, then a new
@@ -261,7 +261,7 @@ static void run(void)
         xSemaphoreTake(panel, portMAX_DELAY);
         ui_close();
         ms(3000);
-        ui_wipe(); // a fresh session and less ghosting for the next game
+        ui_wipe(); // no ghosts for the next game
         xSemaphoreGive(panel);
     }
 }

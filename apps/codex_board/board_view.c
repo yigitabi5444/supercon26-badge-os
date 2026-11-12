@@ -15,7 +15,7 @@ unsigned cb_pages(const cb_feed_t *feed)
 }
 
 // Prefer word boundaries when the remaining lines can still fit every character.
-static void wrapped_ink(int x, int y, int scale, unsigned columns, const char *s, unsigned lines, bool ink)
+static void wrapped(int x, int y, int scale, unsigned columns, const char *s, unsigned lines)
 {
     char line[113];
     for (unsigned i = 0; *s && i < lines; i++) {
@@ -30,14 +30,9 @@ static void wrapped_ink(int x, int y, int scale, unsigned columns, const char *s
         }
         memcpy(line, s, n);
         line[n] = '\0';
-        text(x, y + (int)i * (8 * scale + 2), scale, line, ink);
+        text(x, y + (int)i * (8 * scale + 2), scale, line, true);
         s += n;
     }
-}
-
-static void wrapped(int x, int y, int scale, unsigned columns, const char *s, unsigned lines)
-{
-    wrapped_ink(x, y, scale, columns, s, lines, true);
 }
 
 static void timestamp(int x, int y, const char *s)

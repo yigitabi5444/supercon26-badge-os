@@ -24,7 +24,7 @@ void text(int x, int y, int scale, const char *s, bool ink)
                 if (font8x8_basic[*s & 0x7F][r] >> c & 1) box(x + c * scale, y + r * scale, scale, scale, ink);
 }
 
-void icon_base(int x, int y) // black square with rounded corners
+void icon_base(int x, int y)
 {
     enum { R = 28 };
     box(x, y, ICON, ICON, true);

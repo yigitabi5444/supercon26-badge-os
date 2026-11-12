@@ -12,13 +12,6 @@ static const char *TAG = "os";
 static QueueHandle_t btnq;
 static volatile int held;
 
-// MENU + and MENU - held together in an app: home, by a restart (apps never return by themselves).
-static void go_home(void)
-{
-    ESP_LOGI(TAG, "MENU + and MENU - held: going home");
-    esp_restart();
-}
-
 static void buttons(void *arg)
 {
     static const int pin[4] = {40, 15, 39, 16}; // BTN_PLUS, BTN_MINUS, BTN_A, BTN_B (GPIOs of the printed names)
@@ -31,7 +24,10 @@ static void buttons(void *arg)
             if (now & ~was & 1 << k) xQueueSend(btnq, &k, 0);
         held = was = now;
         both = (now & 3) == 3 ? both + 20 : 0; // MENU + and MENU - together, held 0.4 s so a game cannot slip into it
-        if (both == 400 && in_app) go_home();
+        if (both == 400 && in_app) { // home, by a restart
+            ESP_LOGI(TAG, "MENU + and MENU - held: going home");
+            esp_restart();
+        }
     }
 }
 

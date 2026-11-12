@@ -3,7 +3,8 @@
 // the ball; the guest shows the host's state and sends its paddle. Both screens show their own player on the left.
 // Any button starts pairing (press on both badges at once); in a game hold MENU + to move up, A to move down.
 // The AS5600 knob add-on (knob_angle(), plug in any time) moves the paddle too.
-// Only a reboot ends a pairing; the other badge goes back to free after LINK_TIMEOUT without a packet.
+// Only leaving Pong (MENU + and MENU - held: the badge restarts) ends a pairing; the other badge goes back to free
+// after LINK_TIMEOUT without a packet.
 // Pairing and heartbeat: link.h.
 #include <stdlib.h>
 #include <string.h>
@@ -22,7 +23,7 @@
 
 static const char *TAG = "pong";
 
-// Tuning knobs. The panel lags ~0.2 s behind the game, so the ball has to be slow enough to react to.
+// Tuning knobs. The panel shows the game a frame or so late, so the ball has to be slow enough to react to.
 #define STEP_MS 15   // game step
 #define BALL_V 2     // ball px per step across (133 px/s: ~7 s from paddle to paddle)
 #define BALL_DY 3    // steepest bounce, px per step up or down
@@ -123,7 +124,7 @@ static void pong(void)
             continue;
         }
         draw(&s, tr, ntr, !host, true);
-        ui_frame(1); // returns while the panel works: the next frame is drawn meanwhile
+        ui_frame(1);
         last = s, frames++;
     }
     ui_close();
@@ -196,8 +197,6 @@ static void link_task(void *arg)
         if (!in_pong) next_step = now;
         for (; in_pong && now >= next_step; next_step += STEP_MS) { // fixed rate, whenever this loop wakes
             int held = btn_held(), v = (held >> BTN_A & 1) - (held >> BTN_PLUS & 1);
-            static int was_held;
-            if (held != was_held) ESP_LOGI(TAG, "held 0x%x, knob %d", was_held = held, knob_angle()); // hold-to-move check
             int k = knob_angle();
             if (k >= 0 && knob_last >= 0) knob_acc += ((k - knob_last + 6144) % 4096 - 2048) * KNOB_DIR * KNOB_TURN;
             knob_last = k;
@@ -258,7 +257,6 @@ static void link_task(void *arg)
     }
 }
 
-// Never returns: a reboot leaves Pong (and ends a pairing).
 static void run(void)
 {
     game_task = xTaskGetCurrentTaskHandle();
@@ -268,7 +266,7 @@ static void run(void)
     ui_keys("pair", "pair", "pair", "pair"); // press on both badges at once
     for (;;) { // unpaired: an empty court, then wait for the link task to pair
         draw(&(game_t){.py = {(CH - PADH) / 2, (CH - PADH) / 2}}, NULL, 0, false, false);
-        ui_frame(3);
+        ui_frame(1);
         ui_close();
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         pong();

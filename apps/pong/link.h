@@ -1,5 +1,5 @@
 // Two-badge pairing and heartbeat over ESP-NOW. Pure logic, no ESP-IDF calls, so tools/test_link.c runs it on a PC.
-// Times are in ms. Protocol: NOTES.md "Pong over ESP-NOW".
+// Times are in ms.
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>

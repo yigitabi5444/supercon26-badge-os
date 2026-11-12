@@ -1,5 +1,5 @@
 // Wired update: this badge turns its USB-C port into a USB host, waits for another badge on a USB-C cable and copies
-// its own firmware (bootloader, partition table, running app) onto it, then resets it. Core from idf_port clone.c.
+// its own firmware (bootloader, partition table, running app) onto it, then resets it.
 // Both badges must run on their batteries: the USB-C port is sink-only and cannot power the other badge.
 // A target on our firmware drops into its ROM loader by itself; one on the stock MicroPython needs BOOT held while
 // RESET is tapped. After a good update this badge restarts.
@@ -133,7 +133,7 @@ static void wired(void)
         ui_close();
         while (pct == -1)
             if (btn_get(200) >= 0) stop = true;
-        if (pct == -3) esp_restart(); // home, with the badge back on the Mac
+        if (pct == -3) esp_restart(); // home: only a restart gives the port back to USB-Serial-JTAG
 
         ui_keys(NULL, NULL, NULL, NULL);
         // Copying: redraw whenever the number moved. ui_frame returns while the panel pulls, so the loop runs at the

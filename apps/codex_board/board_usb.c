@@ -1,5 +1,4 @@
 #include "board_usb.h"
-#include <stdint.h>
 #include <stdio.h>
 #include "driver/usb_serial_jtag.h"
 #include "driver/usb_serial_jtag_vfs.h"

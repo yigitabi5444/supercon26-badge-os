@@ -110,9 +110,8 @@ static void drfw(void)
     else CMD(BOTH, 0x90, 0x00, 0x3B, 0x00, 0xA9);
 }
 
-// A panel session: epd_reset, both RAM planes and epd_start (in either order), pulls, epd_close. Same sequence as
-// PDi EPD_Driver_GU_large and the stock epd.py, plus what the badge team documented for this B1 CoG
-// (2026-Billboard_Badge/documentation/itc97-driver-reference.pdf): the 0x70 booster setting and the 0xB0 waveform.
+// The B1 session follows PDi EPD_Driver_GU_large and the stock epd.py, plus what the badge team documented for this
+// CoG (2026-Billboard_Badge/documentation/itc97-driver-reference.pdf): the 0x70 booster setting and the 0xB0 waveform.
 
 // Short waveform for the B1 CoG: data/rendered_luts.py "lutb_base" from the badge team.
 // 5 tables (paper, ink, red, unused, VCOM) x 10 groups of {level, on, off, ph2, on, off, ph2, repeat};
@@ -519,7 +518,7 @@ static void otp_read(bool b1, uint8_t *o)
     gpio_set_direction(MOSI, GPIO_MODE_OUTPUT);
 }
 
-// B1 first, then 84 (the badge team's order). Neither valid: the B1 driver, as before.
+// B1 first, then 84 (the badge team's order). Neither valid: the B1 driver.
 static void probe(void)
 {
     if (probe_magic == 0x084B1u) {

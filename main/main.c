@@ -16,7 +16,7 @@ void app_main(void)
     display_init();
     sao_init();
     buttons_init();
-    leds_init(); // off: they still show whatever ran before the reset
+    leds_init();
 
     ui_wipe(); // the film still shows whatever ran before the reset; frames need a known start
     battery_pct(); // one reading before Wi-Fi starts sharing ADC2

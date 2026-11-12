@@ -54,14 +54,13 @@ Then add it to `main/apps.c`: one `extern` and one line in `apps[]`, where it sh
 - **Label the buttons** with `ui_keys(plus, minus, a, b)`: each label shows beside its button (MENU + above A on the
   left, MENU - above B on the right). Every app starts with none.
 - **Frames.** Draw into `fb` (960x672, 1 bit, 1 = black) with `box`, `outline`, `text`, then `ui_frame(1)`. A frame
-  is a calm whole-screen update, ~0.27 s, ~3.5-4 frames/s at best: only the pixels that changed move, nothing
-  flashes. `ui_frame` returns while the panel pulls, so draw the next frame meanwhile; run game logic on its own
+  is a calm whole-screen update, ~3.5-4 frames/s at best (~1.6 on the rare E2969JS084 panel): only the pixels that
+  changed move, nothing flashes. `ui_frame` returns while the panel pulls, so draw the next frame meanwhile; run game logic on its own
   clock (a second task that calls `ui_frame` with the latest state, as `snake/` does), not one step per frame. An
   unchanged frame costs nothing. Ink is dark red, erased ink leaves a light ghost: `ui_wipe()` (~2.8 s) at scene
   changes. `ui_close()` when the screen will sit still.
 - **Tasks** that call `ui_frame`, `ui_close` or `ui_wipe` need a stack of 6 KB or more: the frame is sent from the
   caller's task.
-- **Never run the panel's slow refresh** (~35 s, true black and red): the owner does not want it on the badge.
 - **Wi-Fi and ranging.** The OS keeps ranging on every screen, so other badges' Radar sees this one. `wifi_connect()`
   joins the saved network (Settings, the event Wi-Fi by default) and `wifi_on()` gives a bare radio for ESP-NOW: both
   stop ranging. Done with the network but staying in the app: `wifi_off()`, then `ranging_start()`. Back home the OS

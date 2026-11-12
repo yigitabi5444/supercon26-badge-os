@@ -18,9 +18,6 @@ static i2c_master_bus_handle_t sao_bus;
 const int sao_gpio[3][2] = {{2, 42}, {4, 5}, {7, 6}}; // GPIO1, GPIO2 of SAO1..3
 static i2c_master_dev_handle_t knob;
 
-// The AS5600 also drives its angle as a voltage (0-3.3 V over a turn) on its port's GPIO1: read that when the knob
-// does not answer on I2C. SAO1's GPIO1 is GPIO2 (ADC1). A floating pin follows the pull resistors, a driven one does
-// not: that tells a plugged knob from an empty slot.
 // An SAO port's GPIO1 (port 0-2 = SAO1-3: GPIO2, GPIO4, GPIO7, all on ADC1) in mV with the internal pull-up or pull-down,
 // floating again after; -1 on error. The knob and the Cricket's port detection both read through here (one owner for
 // ADC1).
@@ -45,6 +42,9 @@ static int sao_gpio1_mv(int port, bool pullup)
     return sum / 4;
 }
 
+// The AS5600 also drives its angle as a voltage (0-3.3 V over a turn) on its port's GPIO1: read that when the knob
+// does not answer on I2C. A floating pin follows the pull resistors, a driven one does not: that tells a plugged knob
+// from an empty slot.
 static int knob_analog(int *up_mv, int *down_mv)
 {
     int up = sao_gpio1_mv(0, true), down = sao_gpio1_mv(0, false);

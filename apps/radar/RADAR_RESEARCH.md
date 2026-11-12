@@ -4,6 +4,10 @@ Goal: show other badge os badges nearby: who, how far, and if possible which dir
 Hardware facts: ESP32-S3-WROOM-1 (module PCB antenna, 2.4 GHz only), no IMU, no compass (docs/DEVICE_INFO.md).
 Optional AS5600 knob on an SAO port. ESP-IDF v6.0.2. "Checked" = read in the local IDF tree; "[n]" = source list at the end.
 
+Outcome: ESP-NOW discovery + FTM + shared ranges (options B and C below, no manual bearing) now run in the OS on every
+screen (`badge/ranging.h`); the Radar app only reads `ranging_get`. Where sections 4 and 6 talk about the app owning
+the radio or Wi-Fi going off back home, that is the plan of the time, not what the code does.
+
 ## 1. Wi-Fi FTM (802.11mc round-trip time)
 
 **Supported on the S3: yes, both roles.** Checked: `SOC_WIFI_FTM_SUPPORT 1` in `soc/esp32s3/.../soc_caps.h`.
@@ -71,7 +75,7 @@ Optional AS5600 knob on an SAO port. ESP-IDF v6.0.2. "Checked" = read in the loc
 
 ## 5. What the e-paper can show
 
-- ~0.5 s per frame, ~2 frames/s at best, ghosts where ink was erased. So: no sweeping beam, no smooth motion.
+- ~0.27 s per frame, ~3.5-4 frames/s at best, ghosts where ink was erased. So: no sweeping beam, no smooth motion.
 - Good: fixed rings/grid drawn once; peer dots or names moved every 2-5 s; a list sorted by distance with big
   numbers ("3.2 m") and a small trend arrow; scale 3-4 text (24-32 px) for names. `ui_wipe` every few minutes
   or on scene change to clear ghosts. Redraw only when a bucket or rounded distance changes.
@@ -152,4 +156,4 @@ and still reads about 0 cm side by side (`RNG_OFFSET_CM` 0 was checked with (16,
 Risk check: a v0.8 badge's FTM success rate on an updated badge while 2+ other updated badges range nearby,
 before and after. If it falls, lengthen the pause in 2.
 Expected: if a session takes ~50 ms, distances between updated badges refresh 1-2 times/s with 8-10 badges;
-pairs with a v0.8 badge stay as today. Radar needs no change (it reads `ranging_get` every ~0.5 s).
+pairs with a v0.8 badge stay as today. Radar needs no change (it reads `ranging_get` every frame).

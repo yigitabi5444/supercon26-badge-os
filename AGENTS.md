@@ -40,9 +40,7 @@ How to write an app, its folder, `CMakeLists.txt`, the `app_t` descriptor and th
 `ui_keys`, MENU + and MENU - held = home, Wi-Fi and ranging, tasks that draw need 6 KB of stack): `apps/README.md`.
 The API is `components/os/include/badge/`, one documented header per service. How the OS works: `docs/os.md`.
 
-## The panel (measured; pins and timings in docs/DEVICE_INFO.md)
-- `ui_frame` is one calm whole-screen update: ~0.27 s, ~3.5-4 frames/s. Only changed pixels move, nothing flashes.
-  It blocks only until the previous frame's pull is done, then returns while the panel works: draw the next frame
-  meanwhile, and run game logic on its own clock (see `apps/snake`) rather than one step per frame.
-  Ink is dark red, erased ink leaves a light ghost. No red. `ui_wipe()` (~2.8 s) shakes the ghosts off.
-- Never run the slow 3-colour refresh (~35 s): the owner does not want it on the badge.
+## The panel
+What a frame costs and how to draw: `badge/display.h`. The driver: `docs/os.md`. Pins, timings and the rules that keep
+the panel alive: `docs/DEVICE_INFO.md`. Never run the slow 3-colour refresh (~35 s): the owner does not want it on the
+badge.

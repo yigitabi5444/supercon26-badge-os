@@ -6,8 +6,9 @@ Apps take over the badge; hold MENU + and MENU - together to get back home.
 
 ## Features
 - **Home screen**: 8 app icons per page, OS version bottom right.
-- **Calm e-paper frames**: about 0.27 s per frame (3.5-4 frames/s), only the pixels that change move, nothing
-  flashes. A custom waveform for the panel's two Pervasive Displays B1 controllers.
+- **Calm e-paper frames**: 3.5-4 frames/s, only the pixels that change move, nothing flashes. A custom waveform for
+  the panel's two Pervasive Displays controllers; both panel versions Hackaday shipped (E2969JS0B1 and E2969JS084,
+  ~1.6 frames/s) are detected at power-on.
 - **Top bar on every screen**: what each button does right now, printed beside the button; app name, username,
   OS version and battery in the middle.
 - **Online update**: pulls the latest GitHub release over Wi-Fi (OTA, with rollback if the new version doesn't

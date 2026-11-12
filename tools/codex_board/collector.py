@@ -9,7 +9,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from model import AttentionTracker, STATES, clean, quota_windows, revision, stamp, timezone, wire
+from model import AttentionTracker, STATES, clean, quota_windows, revision, stamp, timezone, title_status, wire
 from quota import read_limits
 
 
@@ -21,7 +21,6 @@ def tmux_rows(session=None, selected=(), all_panes=False):
     command += ["-s", "-t", session] if session else ["-a"]
     result = subprocess.run(command + ["-F", fields], capture_output=True,
                             text=True, check=True, timeout=3)
-    from model import title_status
     rows = []
     found = set()
     for line in result.stdout.splitlines():

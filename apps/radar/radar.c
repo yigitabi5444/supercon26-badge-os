@@ -30,6 +30,9 @@ static void id_of(const uint8_t *mac, char *s)
     if (memcmp(mac, me, 6) ? !ranging_name(mac, s) : cfg_get("name", s, 13) <= 0) sprintf(s, "%02X%02X", mac[4], mac[5]);
 }
 
+// A badge's starting angle on the map, from its MAC: stable across frames.
+static float mac_angle(const uint8_t *mac) { return (mac[5] * 256 + mac[4]) * 2 * (float)M_PI / 65536; }
+
 static int find(const node_t *v, int n, const uint8_t *mac)
 {
     for (int i = 0; i < n; i++)
@@ -74,7 +77,7 @@ static void layout(const int *cm, int try)
     memcpy(keep, nd, sizeof nd);
     float was = stress();
     for (int i = 1; i < nn; i++) {
-        float a = (nd[i].mac[5] * 256 + nd[i].mac[4]) * 2 * (float)M_PI / 65536 + try * i * 2.4f;
+        float a = mac_angle(nd[i].mac) + try * i * 2.4f;
         float d = cm[i] < 0 ? 1 : cm[i] / 100.0f;
         nd[i].x = d * cosf(a), nd[i].y = d * sinf(a);
     }
@@ -118,7 +121,7 @@ static void run(void)
 
         for (int i = 1; i < nn; i++) { // carry positions over; a new badge starts on its ring at a MAC angle
             int o = find(old, on, nd[i].mac);
-            float a = (nd[i].mac[5] * 256 + nd[i].mac[4]) * 2 * (float)M_PI / 65536, d = cm[i] < 0 ? 1 : cm[i] / 100.0f;
+            float a = mac_angle(nd[i].mac), d = cm[i] < 0 ? 1 : cm[i] / 100.0f;
             if (o >= 0) nd[i].x = old[o].x, nd[i].y = old[o].y;
             else nd[i].x = d * cosf(a), nd[i].y = d * sinf(a);
         }
@@ -183,7 +186,7 @@ static void run(void)
         } else {
             text(MAP_X + 24, cy - 12, 3, "Map: needs 3+ badges", true);
         }
-        ui_frame(1); // waits for the previous pull to end, then returns while this one runs. No change = no refresh
+        ui_frame(1);
 
         int b = btn_get(FRAME_MS);
         if (b == BTN_A) ui_wipe();

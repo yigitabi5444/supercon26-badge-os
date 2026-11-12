@@ -336,7 +336,7 @@ static void draw_task(void *arg)
     }
 }
 
-static void task(void *arg)
+static void run(void) // never returns (home is MENU + and MENU -); the home task's 16 KB stack is enough for TLS
 {
     char *buf = heap_caps_malloc(CAP, MALLOC_CAP_SPIRAM), u[4] = "";
     if (cfg_get("wx_lat", lat, sizeof lat) < 0 || cfg_get("wx_lon", lon, sizeof lon) < 0) *lat = *lon = 0;
@@ -353,11 +353,6 @@ static void task(void *arg)
         while (esp_timer_get_time() < due)
             if (btn_get((due - esp_timer_get_time()) / 1000 + 1) == BTN_B) break;
     }
-}
-
-static void run(void) // never returns: home is MENU + and MENU -
-{
-    task(NULL); // the home task's 16 KB stack is enough for TLS
 }
 
 static void icon(int x, int y) // a sun behind a cloud

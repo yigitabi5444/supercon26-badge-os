@@ -14,7 +14,7 @@ from collector import atomic_write
 from model import revision, stamp, timezone, wire
 
 
-def test_feed(phase, event, zone, now):
+def phase_feed(phase, event, zone, now):
     waiting = bool(event)
     feed = {'mode': 'DEMO', 'timezone': str(zone), 'sampled_at': stamp(now, zone),
             'source': 'OK', 'message': phase,
@@ -30,7 +30,7 @@ def emit_phase(output, zone, message, event, seconds):
     print(message, flush=True)
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
-        atomic_write(output, test_feed(message, event, zone, time.time()))
+        atomic_write(output, phase_feed(message, event, zone, time.time()))
         time.sleep(0.5)
 
 
@@ -57,7 +57,7 @@ def main():
         except KeyboardInterrupt:
             print('\nTest interrupted.', flush=True)
         finally:
-            atomic_write(output, test_feed('Test ended. Restart the live collector.', '', zone, time.time()))
+            atomic_write(output, phase_feed('Test ended. Restart the live collector.', '', zone, time.time()))
     print('Test ended. Restart the live collector. Report which LED sequences you saw.', flush=True)
 
 

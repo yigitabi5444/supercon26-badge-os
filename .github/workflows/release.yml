@@ -1,5 +1,5 @@
 # Tag push v* (e.g. v0.2): build with that version and attach the images to the GitHub release.
-# badge_os.bin is what the Online app downloads; badge_os_full.bin (bootloader + table + app) flashes at 0x0 by cable.
+# badge_os.bin is what Online update downloads; badge_os_full.bin (bootloader + table + app) flashes at 0x0 by cable.
 name: release
 on:
   push:
