@@ -51,10 +51,20 @@ static const char page[] =
     "<small>Or in Google Maps long-press a place and copy the coordinates (short maps.app.goo.gl links do not "
     "work: the badge has no internet to follow them).</small></div>"
     "Temperature<select id=wx_unit><option value=''>Celsius<option value=F>Fahrenheit</select></fieldset>"
+    "<fieldset><legend>Clock</legend>Time zone<select id=tz><option value=''>US Pacific"
+    "<option value='MST7MDT,M3.2.0,M11.1.0'>US Mountain<option value=MST7>Arizona"
+    "<option value='CST6CDT,M3.2.0,M11.1.0'>US Central<option value='EST5EDT,M3.2.0,M11.1.0'>US Eastern"
+    "<option value=UTC0>UTC<option value='GMT0BST,M3.5.0/1,M10.5.0'>UK, Ireland, Portugal"
+    "<option value='CET-1CEST,M3.5.0,M10.5.0/3'>Central Europe<option value='EET-2EEST,M3.5.0/3,M10.5.0/4'>Eastern Europe"
+    "<option value='<+03>-3'>Turkey, Moscow<option value='IST-5:30'>India<option value='CST-8'>China, Singapore"
+    "<option value='JST-9'>Japan, Korea<option value='AEST-10AEDT,M10.1.0,M4.1.0/3'>Sydney</select></fieldset>"
+    "<fieldset><legend>Sound</legend>Speaker port (without a Cricket)<select id=snd_sao><option value=''>SAO2"
+    "<option value=1>SAO1<option value=3>SAO3<option value=0>None</select></fieldset>"
     "<button id=save>Save and restart the badge</button><p id=st></p><script>"
-    "var K=['name','ssid','pass','badge_text','wx_city','wx_lat','wx_lon','wx_unit','cb_url'],$=function(i){return document.getElementById(i)},"
+    "var K=['name','ssid','pass','badge_text','wx_city','wx_lat','wx_lon','wx_unit','cb_url','tz','snd_sao'],$=function(i){return document.getElementById(i)},"
     "img=null,gray=null,hadImg=false;"
-    "fetch('/cfg').then(function(r){return r.json()}).then(function(c){K.forEach(function(k){$(k).value=c[k]||''});"
+    "fetch('/cfg').then(function(r){return r.json()}).then(function(c){"
+    "if(c.tz&&![].some.call($('tz').options,function(o){return o.value==c.tz}))$('tz').add(new Option(c.tz,c.tz));K.forEach(function(k){$(k).value=c[k]||''});"
     "hadImg=c.img;if(!c.wx_city&&c.wx_lat)$('wn').checked=true;if(c.img){$('mi').checked=true;$('ist').textContent='A picture is saved; choose a file to replace it.'}mode()});"
     "function mode(){$('bt').hidden=$('mi').checked;$('bi').hidden=!$('mi').checked;"
     "$('wcd').hidden=$('wn').checked;$('wnd').hidden=!$('wn').checked}"
@@ -86,7 +96,7 @@ static const char page[] =
     "</script>";
 
 static volatile bool saved;
-static const char *const keys[] = {"name", "ssid", "pass", "badge_text", "wx_city", "wx_lat", "wx_lon", "wx_unit", "cb_url"};
+static const char *const keys[] = {"name", "ssid", "pass", "badge_text", "wx_city", "wx_lat", "wx_lon", "wx_unit", "cb_url", "tz", "snd_sao"};
 
 static void json_str(char **p, const char *key, const char *v) // "key":"v", (v JSON-escaped)
 {
@@ -146,13 +156,10 @@ static bool coord(const char *s, double max) // empty, or a number in -max..max
     return !*s || (e != s && !*e && d >= -max && d <= max);
 }
 
-static bool feed_url(const char *s)
+static bool feed_url(const char *s) // empty, or http://host... with no spaces, credentials or fragment
 {
-    if (!*s) return true;
-    if (strlen(s) > 240 || strncmp(s, "http://", 7) || !s[7] || s[7] == '/') return false;
-    for (const unsigned char *p = (const unsigned char *)s; *p; p++)
-        if (*p <= 32 || *p > 126 || *p == '@' || *p == '#') return false;
-    return true;
+    return !*s || (strlen(s) <= 240 && !strncmp(s, "http://", 7) && s[7] && s[7] != '/' && printable(s) &&
+                   !strpbrk(s, " @#"));
 }
 
 // Body: key \0 value \0 ... (no URL decoding needed). Everything is checked before anything is stored.
@@ -176,6 +183,8 @@ static esp_err_t post_save(httpd_req_t *r)
         else if (!strcmp(k, "wx_unit") && strcmp(v, "") && strcmp(v, "C") && strcmp(v, "F")) bad = "Unit: C or F.";
         else if (!strcmp(k, "wx_lat") && !coord(v, 90)) bad = "Latitude: a number from -90 to 90.";
         else if (!strcmp(k, "wx_lon") && !coord(v, 180)) bad = "Longitude: a number from -180 to 180.";
+        else if (!strcmp(k, "tz") && (l > 63 || !printable(v))) bad = "Time zone: up to 63 plain characters.";
+        else if (!strcmp(k, "snd_sao") && l && (l > 1 || *v < '0' || *v > '3')) bad = "Speaker port: 0 to 3.";
         else if (!strcmp(k, "cb_url") && !feed_url(v)) bad = "Feed URL: http:// address, up to 240 characters, no credentials.";
         else if (!known(k)) bad = "Unknown setting.";
     }
