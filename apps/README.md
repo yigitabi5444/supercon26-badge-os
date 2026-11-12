@@ -66,8 +66,8 @@ Then add it to `main/apps.c`: one `extern` and one line in `apps[]`, where it sh
   joins the saved network (Settings, the event Wi-Fi by default) and `wifi_on()` gives a bare radio for ESP-NOW: both
   stop ranging. Done with the network but staying in the app: `wifi_off()`, then `ranging_start()`. Back home the OS
   gives the radio back by itself. Never use ESP-NOW while ranging runs.
-- **USB.** On the home screen the badge must always be flashable: an app that makes USB a host and returns gets the
-  badge restarted; better, restart it yourself when done.
+- **USB.** On the home screen the badge must always be flashable, with its log on the USB console: an app that makes
+  USB a host, or installs the USB serial driver to read the port itself, gets the badge restarted when it returns.
 - **Settings** are `cfg_get` / `cfg_set` strings; the keys in use are listed in `badge/settings.h`. A new key needs a
   field in the Settings app to be edited.
 - **Sound** (`snd_*`) and the **LEDs** are stopped and turned off when the app returns home; the LEDs also at boot.

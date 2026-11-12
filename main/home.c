@@ -8,6 +8,7 @@
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
+#include "driver/usb_serial_jtag.h"
 #include "usb/usb_host.h"
 #include "badge/badge.h"
 #include "badge/os.h"
@@ -72,6 +73,8 @@ void home(void)
         ui_keys("< Left", "Right >", "Open", "Open");
         usb_host_lib_info_t usb;
         if (usb_host_lib_info(&usb) == ESP_OK) esp_restart(); // the app made USB a host: home must stay flashable
+        if (usb_serial_jtag_is_driver_installed()) esp_restart(); // the app took the USB serial port (Codex Board's feed):
+                                                                  // a restart hands it back to the console
         snd_stop();
         if (!ranging_running()) wifi_off(), ranging_start(); // the app took the radio: ranging gets it back
         leds((const uint8_t[LEDS][3]){{0}});
