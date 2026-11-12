@@ -6,11 +6,12 @@
 
 enum { EPD_FAST, EPD_CALM }; // waveforms: the badge team's fast black/white table (ui_wipe), the calm transition one
 
-void epd_init(void);                                   // boot: pins and the SPI bus
+void epd_init(void);                                   // boot: pins, which panel (B1 or 84), the SPI bus
+bool epd_is84(void);                                   // the panel is an E2969JS084
 void epd_reset(void);                                  // reset pulse and booster setting: a session starts
 void epd_load(const uint8_t *p10, const uint8_t *p11); // both RAM planes of both CoGs, whole panel; NULL = all white
 void epd_start(int table);                             // register sequence, the table into 0xB0, DC-DC up
 int epd_pull(int timeout_ms);                          // one pull on what is in RAM, waited for: ms spent
-void epd_frame(const uint8_t *next);                   // calm session: next into 0x10, one pull started (~0.24 s)
+void epd_frame(const uint8_t *next, const uint8_t *film); // calm: next into 0x10 (84: film into 0x11), pull started
 void epd_wait(void);                                   // until both CoGs are done: BUSY polled every 1 ms tick
 void epd_close(void);                                  // DC-DC soft shutdown: the session ends

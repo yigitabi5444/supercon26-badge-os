@@ -96,14 +96,15 @@ void ui_frame(int unused)
         int64_t t0 = esp_timer_get_time();
         if (pulling) epd_wait(), pulling = false;
         int64_t t1 = esp_timer_get_time();
-        if (pulls == 60) panel_off(); // a fresh session every 60 pulls: sessions of 60 are proven, longer ones are not
+        if (pulls == (epd_is84() ? 20 : 60)) panel_off(); // a fresh session: B1 60 pulls (proven), 84 20 (the badge team's)
         if (pulls < 0) {
             epd_reset();
+            if (epd_is84()) epd_load(shown, shown); // the 84 takes its planes before the register sequence, as the badge team's
             epd_start(EPD_CALM);
-            epd_load(shown, shown); // 0x11 must hold what the film shows
+            if (!epd_is84()) epd_load(shown, shown); // 0x11 must hold what the film shows
             pulls = 0;
         }
-        epd_frame(fb);
+        epd_frame(fb, shown);
         memcpy(shown, fb, PLANE);
         pulls++, pulling = true;
         ESP_LOGD(TAG, "frame %d: %d ms waiting for the panel, %d ms sending", pulls, (int)((t1 - t0) / 1000),

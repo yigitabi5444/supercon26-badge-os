@@ -9,7 +9,7 @@ unless marked otherwise. Other sources: the supercon26-badge-idf repo's NOTES.md
 | Part | What |
 |---|---|
 | MCU | ESP32-S3-WROOM-1 (U1), 8 MB flash, octal PSRAM, Wi-Fi 2.4 GHz / ESP-NOW, native USB |
-| Screen | Pervasive Displays E2969JS0B1, 9.7" Spectra R2.0, black/white/red, 960x672, two CoGs ("B1") |
+| Screen | Pervasive Displays 9.7" Spectra R2.0, black/white/red, 960x672, two CoGs: E2969JS0B1 ("B1", most badges) or E2969JS084 ("84") |
 | Buttons | 4 user buttons, two in each top corner (MENU + above A on the left, MENU - above B on the right), plus BOOT and RESET |
 | LEDs | 8x WS2812 (XL-2121RGBC) bar, 1 status LED, 1 charge LED (charger-driven) |
 | Power | LiPo (JST PH 2.0 or pads), MCP73831 charger 500 mA, AP2112K-3.3 LDO, slide switch |
@@ -59,6 +59,12 @@ GPIO45 is listed as MISO in the stock driver but is not connected; it is a strap
 
 ## Screen
 ### What it is
+- Two panels shipped: the E2969JS0B1 ("B1") and the E2969JS084 ("84", CoG "driver 8"). Same size, colours and
+  connector; different register sequence, waveform format (B1 400 bytes, 84 180 bytes) and bit order. badge os probes
+  the OTP at power-on: B1 when `0xB9` (after `0x70 71 36`) gives `otp[0x16] == 0x3B`, `otp[0x0D] == 0x3B`,
+  `otp[0x28] & 0x80`; else 84 when `0xA8` (after `A1 00`, `A7 80`, `A3 00 40`, master only) gives `otp[0] == 0xA5`.
+  The boot log says `panel: E2969JS0B1` or `panel: E2969JS084`. The 84 path follows the badge team's ITC97 driver
+  and is untested here (no 84 on hand): 4 MHz SPI, both planes per frame, ~1.6 frames/s. Measurements below are the B1's.
 - E2969JS0B1, Spectra R2.0 film, operating range 0-40 C, typical stock refresh 31.2 s (PDi spec). The spec also
   asks for a refresh at least every 24 h and storage with a white image.
 - Two CoGs behind one FPC each: the left (master, CS1/BUSY1) drives columns 0-479, the right (slave, CS2/BUSY2)
