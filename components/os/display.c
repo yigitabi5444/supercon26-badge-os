@@ -5,6 +5,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "freertos/task.h"
 #include "esp_app_desc.h"
 #include "esp_attr.h"
 #include "esp_log.h"
@@ -258,7 +259,9 @@ void os_launch_info(void) { show_info(3000, NULL); }
 static void panel_shutdown(void)
 {
     // IDF runs handlers before suspending scheduling: let the current owner finish, even beyond three seconds.
-    while (!xSemaphoreTake(lock, portMAX_DELAY)) ms(1);
+    // A handler already running on the display owner must not retake its nonrecursive mutex.
+    if (xSemaphoreGetMutexHolder(lock) != xTaskGetCurrentTaskHandle())
+        while (!xSemaphoreTake(lock, portMAX_DELAY)) ms(1);
     panel_off();
 }
 
