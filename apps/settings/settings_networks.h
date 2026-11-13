@@ -148,4 +148,3 @@ static esp_err_t network_reply(httpd_req_t *r, bool refresh)
 
 static esp_err_t get_networks(httpd_req_t *r) { return network_reply(r, false); }
 static esp_err_t scan_networks(httpd_req_t *r) { return network_reply(r, true); }
-

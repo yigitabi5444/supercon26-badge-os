@@ -128,4 +128,3 @@ static const char page[] =
     "if(!r.ok)throw 'picture';return fetch('/save',{method:'POST',body:b})}).then(function(r){return r.text()})"
     ".then(function(t){$('st').textContent=t}).catch(function(e){$('st').textContent='Failed: '+e})}"
     "</script>";
-

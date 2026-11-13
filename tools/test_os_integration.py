@@ -54,10 +54,21 @@ static bool active_pull, variant84, callback_frame, callback_cancel;
 static int held_mask, flushes, last_timeout, boot_error, deinit_calls, nvs_reads, nvs_writes, flash_erases;
 static int init_nvs=-1, svc_started, range_started, phase, unread;
 static unsigned bits;
+static bool shutdown_contention, owner_finished;
+static int requested_timeout;
+static void (*finish_owner)(void);
 static volatile bool dismiss_card;
 static uint8_t output[PLANE];
 static SemaphoreHandle_t xSemaphoreCreateMutex(void) { return 1; }
-static int xSemaphoreTake(int x,int timeout) { (void)x;(void)timeout;assert(!mutex_depth);mutex_depth=1;return 1; }
+static int xSemaphoreTake(int x,int timeout) {
+ (void)x;
+ if (shutdown_contention) {
+  assert(mutex_depth==1);requested_timeout=timeout;
+  if(timeout!=portMAX_DELAY) { clock_us+=(int64_t)timeout*1000;return 0; }
+  clock_us+=4000000;finish_owner();mutex_depth=0;shutdown_contention=false;
+ }
+ assert(!mutex_depth);mutex_depth=1;return 1;
+}
 static void xSemaphoreGive(int x) { (void)x;assert(mutex_depth==1);mutex_depth=0; }
 static EventGroupHandle_t xEventGroupCreate(void) { return &bits; }
 static unsigned xEventGroupSetBits(EventGroupHandle_t e,unsigned b) { return *e|=b; }
@@ -130,6 +141,7 @@ int btn_get(int timeout) {
 }
 '''
 checks=r'''
+static void finish_panel_owner(void) { panel_off();owner_finished=true; }
 int main(void) {
  display_init();cfg_storage_init(false);
  assert(!cfg_storage_ready()&&!cfg_set("name","demo")&&!cfg_set_image(NULL));
@@ -159,12 +171,19 @@ int main(void) {
  os_app(NULL,NULL);ui_frame(1);assert(!in_app);ui_close();
  variant84=true;pulls=20;ui_frame(1); /* unchanged frame does not reopen */
  fb[TOP*W/8+50]^=1;int n=resets;ui_frame(1);assert(resets==n+1);ui_close();
+ // Restart must wait for an owner that lasts beyond the old three-second timeout.
+ fb[TOP*W/8+51]^=1;ui_frame(1);assert(active_pull&&pulling);
+ mutex_depth=1;shutdown_contention=true;finish_owner=finish_panel_owner;
+ int64_t shutdown_at=clock_us;panel_shutdown();
+ assert(owner_finished&&requested_timeout==portMAX_DELAY&&clock_us-shutdown_at>=4000000);
+ assert(mutex_depth==1&&!pulling&&!active_pull&&pulls==-1); // shutdown owns the lock permanently
+ mutex_depth=0; // fixture alone returns from shutdown to run independent boot checks
  for(int e=ESP_ERR_NVS_NO_FREE_PAGES;e<=ESP_ERR_NVS_NEW_VERSION_FOUND;e++) {
   boot_error=e;int old=deinit_calls;phase=0;app_main();
   assert(!cfg_storage_ready()&&deinit_calls==old+1&&svc_started<range_started);
  }
  boot_error=0;app_main();assert(cfg_storage_ready()&&svc_started<range_started);
- assert(wait_calls>0&&closes>0&&!mutex_depth);puts("OS v1.2: Info/background suppression/restore/dwell, IP lifecycle, NVS guard and boot order PASS");
+ assert(wait_calls>0&&closes>0&&!mutex_depth);puts("OS v1.2: Info/background suppression/restore/dwell, IP lifecycle, NVS guard, >3s shutdown contention and boot order PASS");
 }
 '''
 code=preamble+'\n'+source('components/os/settings.c')+'\n'+source('components/os/wifi.c')+'\n'+source('components/os/draw.c')+'\n'+source('components/os/display.c')+'\n'+source('main/main.c')+'\n'+checks

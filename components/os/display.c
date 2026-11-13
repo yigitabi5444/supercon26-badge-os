@@ -257,7 +257,9 @@ void os_launch_info(void) { show_info(3000, NULL); }
 // the panel off mid-refresh. The lock stays taken: no frame after this one.
 static void panel_shutdown(void)
 {
-    if (xSemaphoreTake(lock, pdMS_TO_TICKS(3000))) panel_off();
+    // IDF runs handlers before suspending scheduling: let the current owner finish, even beyond three seconds.
+    while (!xSemaphoreTake(lock, portMAX_DELAY)) ms(1);
+    panel_off();
 }
 
 void os_app(const app_t *app, const app_info_t *info)
