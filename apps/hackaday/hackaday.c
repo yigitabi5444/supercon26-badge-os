@@ -256,4 +256,7 @@ static void icon(int x, int y) // news feed: a dot and two arcs from the bottom 
 }
 
 const app_t app_hackaday = {"Hackaday", icon, run};
+const app_info_t app_hackaday_info = {
+    "Browse Hackaday posts and images, then open a post to read it. Requires Wi-Fi.",
+    "Content: Hackaday. Code: apps/hackaday/", true};
 

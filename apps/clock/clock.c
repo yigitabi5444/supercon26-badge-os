@@ -362,4 +362,7 @@ static void icon(int x, int y) // a dial: ring, hour ticks, two hands
 }
 
 const app_t app_clock = {"Clock", icon, run};
+const app_info_t app_clock_info = {
+    "24-hour clock and Supercon schedule. Wi-Fi sets time. Left buttons look ahead/back; Wipe returns to now.",
+    "Code: apps/clock/clock.c; fonts/schedule: apps/clock/tools", true};
 

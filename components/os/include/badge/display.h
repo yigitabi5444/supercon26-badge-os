@@ -26,4 +26,8 @@ void ui_close(void);
 // left, MENU - above B on the right). Up to ~16 characters each; NULL or "" = no label. Set it again when it changes;
 // it shows from the next ui_frame. Every app starts with no labels.
 void ui_keys(const char *plus, const char *minus, const char *a, const char *b);
+// Runtime Info retains the latest app frame and labels; background frames/wipes are suppressed.
+// A free app button may call this; apps that wipe from a second task must serialize their drawer.
+void ui_info(void);
+void ui_info_until(const volatile bool *dismiss); // Settings save can dismiss the card
 void ui_wipe(void); // scene change: an all-black then an all-white frame shake the ghosts off (~2.8 s), fb all white

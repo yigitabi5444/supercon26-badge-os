@@ -278,3 +278,6 @@ static void icon(int x, int y) // a falling L over a stacked floor
 }
 
 const app_t app_blocks = {"Tetris", icon, run};
+const app_info_t app_blocks_info = {
+    "Turn, move and drop falling blocks to complete rows.",
+    "Code: apps/blocks/blocks.c", true};

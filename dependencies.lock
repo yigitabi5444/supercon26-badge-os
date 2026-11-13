@@ -105,6 +105,6 @@ direct_dependencies:
 - espressif/esp-serial-flasher
 - espressif/qrcode
 - espressif/usb_host_cdc_acm
-manifest_hash: ba80b28658f305d7c7f06e51c85d0f4ffb08db18fdb5ef52779905b926467339
+manifest_hash: 0a39c82485ef0d9d1252e57e9ca23d8cd94ef5cffdc47e18c749b50ad4365e27
 target: esp32s3
 version: 3.0.0

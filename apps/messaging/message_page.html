@@ -1,0 +1,51 @@
+<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>Messages</title><style>
+*{box-sizing:border-box}[hidden]{display:none!important}body{font:16px system-ui,sans-serif;max-width:36em;margin:auto;padding:1.25em;color:#222;background:#fff}header{display:flex;align-items:baseline;justify-content:space-between;gap:1em}h1{font-size:1.7em;margin:.3em 0}h2{font-size:1.1em;overflow-wrap:anywhere}button,textarea{font:inherit}button{padding:.6em .9em;border:1px solid #ccc;border-radius:.45em;background:#fff;color:#222;cursor:pointer}button:disabled{opacity:.55;cursor:default}button:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #2463b8;outline-offset:2px}nav{display:flex;gap:.5em;margin:1.3em 0}small,.muted{color:#555;font-size:.85em}#sharing{margin:.25em 0}label{display:block}#compose{font-weight:600;margin:1.2em 0 .5em}textarea{display:block;width:100%;resize:vertical;min-height:9em;padding:.8em;border:1px solid #aaa;border-radius:.5em;margin:0 0 .5em}#send{background:#222;color:#fff;border-color:#222;min-width:6em}#form .actions{display:flex;gap:.5em;flex-wrap:wrap;margin-top:1em}#status{white-space:pre-wrap;overflow-wrap:anywhere;min-height:1.5em;font-size:.9em}#options{border-top:1px solid #ddd;margin-top:1.8em;padding-top:1em}summary{cursor:pointer}#options p{font-size:.9em;line-height:1.5}#relay{margin-right:.5em}#threads button{display:block;text-align:left;width:100%;margin:.5em 0}article{border-top:1px solid #ddd;padding:.9em 0}article p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;margin:.6em 0}article summary{font-size:.8em;color:#555}#forget{margin-left:.4em}
+</style><header><h1>Messages</h1><small id=capacity></small></header>
+<p id=sharing class=muted>Messages are public.</p>
+<p id=full class=muted hidden>Full. Open History, then a thread &gt; Options &gt; Delete this thread.</p>
+<nav><button id=back type=button>History</button><button id=new type=button hidden>New message</button></nav>
+<section id=history hidden><h2>History</h2><div id=threads></div></section>
+<section id=view hidden><h2 id=heading></h2><div id=messages></div></section>
+<form id=form hidden><label id=compose for=body>Message</label><textarea id=body maxlength=240 rows=5 required placeholder="Write a message" aria-describedby=hint></textarea>
+<small id=hint>Up to 240 plain characters.</small><div class=actions><button id=send>Send</button><button id=discard type=button hidden>Discard retry</button></div></form>
+<p id=status role=status aria-live=polite>Loading...</p>
+<details id=options><summary>Options</summary>
+<p><label><input id=relay type=checkbox> Share messages with nearby badges</label><small>Sharing pauses in phone mode. Hold both top buttons for Home to resume.</small></p>
+<button id=refresh type=button>Refresh</button><button id=forget type=button hidden>Delete this thread</button>
+<p>Messages are public and unencrypted. Sender names and phone times are unverified. Saved here does not mean delivered.</p>
+<p>Deleting removes your copy and blocks the last 16 deleted messages here. Other badges keep their copies; new replies may arrive.</p></details>
+<script>
+const key='@KEY@',$=id=>document.getElementById(id);let state,thread=null,pending=null,busy=false,initialized=false,pendingConflict=false,browsing=false;
+function say(s){$('status').textContent=s}
+function stash(){try{pending?sessionStorage.setItem('badge-message-pending:'+state.device,JSON.stringify(pending)):sessionStorage.removeItem('badge-message-pending:'+state.device)}catch(e){say('Browser cannot retain retries across reloads. Keep this tab open.')}}
+function rid(){let b=new Uint8Array(16);crypto.getRandomValues(b);return Array.from(b,x=>x.toString(16).padStart(2,'0')).join('')}
+async function request(path,fields){let controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);try{let r=await fetch(path,{cache:'no-store',signal:controller.signal,headers:{'X-Msg-Key':key,...(path==='/api/state'?{'X-Msg-Time':String(Math.floor(Date.now()/1000))}:{})},...(fields?{method:'POST',body:fields.join('\0')+'\0'}:{})});if(!r.ok)throw Error(await r.text());return r}finally{clearTimeout(timer)}}
+function editing(){let p=!!pending;$('body').disabled=p;$('discard').hidden=!p;$('send').textContent=p?'Retry send':'Send';$('send').disabled=busy||(!pending&&state.messages.length>=state.limit)}
+function threadMessages(){return state.messages.filter(m=>m.thread===thread)}
+function render(){
+ let full=state.messages.length>=state.limit;
+ $('capacity').textContent=state.messages.length+' / '+state.limit+' stored'+(full?' - FULL':'');$('relay').checked=state.relay;$('full').hidden=!full;
+ $('sharing').textContent='Messages are public / '+(state.relay?'shared nearby.':'nearby sharing off.');
+ $('threads').replaceChildren();$('history').hidden=!browsing;$('back').hidden=browsing;$('new').hidden=!browsing&&!thread;$('view').hidden=browsing||!thread||!threadMessages().length;$('forget').hidden=$('view').hidden;
+ let ids=[];for(let m of [...state.messages].reverse())if(!ids.includes(m.thread)){ids.push(m.thread);let group=state.messages.filter(x=>x.thread===m.thread),b=document.createElement('button');b.textContent=(group.some(x=>!x.read)?'Unread: ':'')+(m.title||'Message')+' ('+group.length+')';b.onclick=()=>open(m.thread);$('threads').append(b)}if(!ids.length)$('threads').textContent='No messages yet.';
+ let ms=threadMessages();$('heading').textContent=ms.length?(ms.at(-1).title||'Message'):'Message';$('messages').replaceChildren();
+ for(let m of ms){let a=document.createElement('article'),meta=document.createElement('details'),summary=document.createElement('summary'),source=document.createElement('small'),body=document.createElement('p');summary.textContent=(m.name||'Unnamed')+' / '+(m.clock?new Date(Number(m.seconds)*1000).toISOString().replace('T',' ').slice(0,16)+' UTC (phone)':'time unknown');source.textContent='Badge '+m.sender+'. Sender and phone time unverified.';meta.append(summary,source);body.textContent=m.body;a.append(meta,body);$('messages').append(a)}
+ $('form').hidden=browsing;$('compose').textContent=ms.length?'Reply':'Message';editing();
+}
+function matchesPending(m){return pending.sender===state.device&&m.sender===pending.sender&&m.thread===pending.thread&&m.title===pending.title&&m.body===pending.body&&m.seconds===pending.seconds&&m.clock===pending.clock}
+async function load(){state=await (await request('/api/state')).json();if(!initialized){try{pending=JSON.parse(sessionStorage.getItem('badge-message-pending:'+state.device));if(pending){thread=pending.thread;$('body').value=pending.body}}catch(e){pending=null}if(!thread&&state.selected)thread=state.selected;initialized=true;}pendingConflict=false;if(pending){let stored=state.messages.find(m=>m.id===pending.id);if(stored){if(matchesPending(stored)){thread=pending.thread;pending=null;stash();$('body').value='';say('Saved on this badge. Delivery not confirmed.')}else{pendingConflict=true;say('Save conflict: the stored record does not confirm your draft. Draft kept; check its content and sender before discarding.')}}}render()}
+async function action(fields){await request('/api/action',fields)}
+async function open(id){if(pending){say('Retry or discard your pending draft first.');return}try{await action(['open',id]);thread=id;browsing=false;$('body').value='';await load();say('');$('messages').lastElementChild?.scrollIntoView({block:'nearest'})}catch(e){say('Could not open: '+e.message)}}
+$('new').onclick=()=>{if(pending){say('Retry or discard your pending draft first.');return}thread=null;browsing=false;state.selected=null;$('body').value='';render();say('')};
+$('back').onclick=()=>{if(pending){say('Retry or discard your pending draft first.');return}browsing=true;render();say('')};
+$('refresh').onclick=()=>load().then(()=>{if(!pendingConflict)say('Refreshed.')}).catch(e=>say('Reconnect to the badge Wi-Fi, then Refresh. '+e.message));
+$('relay').onchange=async()=>{try{await action(['relay',$('relay').checked?'1':'0']);await load();if(!pendingConflict)say(state.relay?'Relay enabled; resumes after Home on badge.':'Relay off.')}catch(e){$('relay').checked=!$('relay').checked;say(e.message)}};
+$('forget').onclick=async()=>{if(pending||!confirm('Delete this badge\'s copy? The last 16 deleted messages stay blocked here; other badges keep their copies.'))return;try{await action(['forget',thread]);thread=null;browsing=true;await load();say('Local thread deleted. Recent deleted messages stay blocked here; new replies can still arrive.')}catch(e){say(e.message)}};
+$('form').onsubmit=async e=>{e.preventDefault();if(busy)return;if(!pending&&state.messages.length>=state.limit){say('Storage is full. Open History, then a thread > Options > Delete this thread.');return}try{
+ if(!pending){let body=$('body').value.replace(/\r\n?/g,'\n');if(!body.trim()||body.length>240||!/^[\x20-\x7e\n]+$/.test(body))throw Error('Use 1-240 plain characters and line breaks.');let title=thread?(threadMessages().at(-1)?.title||''):body.trim().replace(/\s+/g,' ').slice(0,32).trimEnd();let id=rid(),sec=Math.floor(Date.now()/1000);let seconds=sec>=1577836800&&sec<=4102444800?String(sec):'0';pending={id,thread:thread||id,title,body,seconds,clock:seconds==='0'?0:1,sender:state.device};stash()}
+ busy=true;editing();say('Saving...');await action(['send',pending.id,pending.thread,pending.title,pending.body,pending.seconds]);thread=pending.thread;pending=null;stash();$('body').value='';try{await load();say('Saved on this badge. Delivery not confirmed.')}catch(e){say('Saved on this badge. Rejoin Wi-Fi, then Options > Refresh.')}
+ }catch(e){say(pending?'Send not confirmed: '+e.message+' Rejoin the badge Wi-Fi and Retry send.':e.message)}finally{busy=false;editing()}};
+$('discard').onclick=()=>{if(!confirm('The save might already have succeeded. Check this thread before writing a replacement. Discard retry draft?'))return;pending=null;stash();editing()};
+load().then(()=>{if(pending&&!pendingConflict)say('Pending save restored. Retry uses the same message ID.');else if($('status').textContent==='Loading...')say('')}).catch(e=>say('Connect to the badge Wi-Fi. Open http://192.168.4.1 and try again. '+e.message));
+</script></html>

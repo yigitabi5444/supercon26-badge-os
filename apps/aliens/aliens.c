@@ -278,3 +278,6 @@ static void icon(int x, int y) // a flying saucer over a gun
 }
 
 const app_t app_aliens = {"SpaceInv", icon, run};
+const app_info_t app_aliens_info = {
+    "Move, fire and clear waves of descending aliens.",
+    "Code: apps/aliens/aliens.c", true};
