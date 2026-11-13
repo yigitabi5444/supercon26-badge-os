@@ -96,7 +96,7 @@ static void run(void)
 {
     uint8_t me[6];
     ranging_me(me);
-    ui_keys(NULL, NULL, "clear ghosts", "home");
+    ui_keys("Info", NULL, "clear ghosts", "home");
     for (int frame = 0;; frame++) {
         int n = ranging_get(rg, 1024);
 
@@ -189,6 +189,7 @@ static void run(void)
         ui_frame(1);
 
         int b = btn_get(FRAME_MS);
+        if (b == BTN_PLUS) ui_info();
         if (b == BTN_A) ui_wipe();
         if (b == BTN_B) return; // the OS keeps ranging on every screen
     }
@@ -208,3 +209,6 @@ static void icon(int x, int y) // rings, a sweep line and two blips
 }
 
 const app_t app_radar = {"Radar", icon, run};
+const app_info_t app_radar_info = {
+    "Find nearby badge os badges. Wi-Fi FTM ranges are approximate; a map needs 3+ badges.",
+    "Code: apps/radar/radar.c", false};

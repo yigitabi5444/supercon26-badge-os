@@ -283,3 +283,6 @@ static void icon(int x, int y) // two paddles and a ball
 }
 
 const app_t app_pong = {"Pong", icon, run};
+const app_info_t app_pong_info = {
+    "Two-badge Pong. Press a button on both badges to pair; use buttons or the knob to play.",
+    "Code: apps/pong/pong.c", true};

@@ -70,7 +70,7 @@ static void run(void)
     panel = xSemaphoreCreateMutex();
     shown = xSemaphoreCreateBinary();
     xTaskCreate(draw_task, "snake draw", 6144, NULL, 5, &drawer);
-    ui_keys("Turn left", "Turn right", NULL, NULL);
+    ui_keys("Turn left", "Turn right", "Info", NULL);
     int ref = knob_angle(); // knob angle at the last turn, -1 = no knob
     for (;;) {
         int hd = 2, tl = 0, dir = 1, food; // dir clockwise from up: 0 up, 1 right, 2 down, 3 left
@@ -88,7 +88,16 @@ static void run(void)
         for (;;) {
             vTaskDelayUntil(&t, pdMS_TO_TICKS(MOVE_MS));
             // one queued turn per move, so two quick presses make two turns in a row
-            int b = btn_get(0), turn = b == BTN_MINUS ? 1 : b == BTN_PLUS ? -1 : 0;
+            int b = btn_get(0);
+            if (b == BTN_A) {
+                xSemaphoreTake(panel, portMAX_DELAY);
+                ui_info();
+                xSemaphoreGive(panel);
+                t = xTaskGetTickCount(); // no catch-up moves after the modal
+                ref = knob_angle();
+                continue;
+            }
+            int turn = b == BTN_MINUS ? 1 : b == BTN_PLUS ? -1 : 0;
             int a = knob_angle(), d = ((a - ref) % 4096 + 6144) % 4096 - 2048; // -2048..2047
             if (a < 0 || ref < 0) ref = a;
             else if (!turn && (d >= KNOB_STEP || d <= -KNOB_STEP)) { // one knob step per move, the rest waits
@@ -140,3 +149,6 @@ static void icon(int x, int y) // a snake of white squares heading for a dot
 }
 
 const app_t app_snake = {"Snake", icon, run};
+const app_info_t app_snake_info = {
+    "Steer, eat and grow. Walls wrap around; buttons or the knob turn the snake.",
+    "Code: apps/snake/snake.c", false};

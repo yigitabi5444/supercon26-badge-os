@@ -13,6 +13,7 @@
 #include "badge/draw.h"
 #include "badge/knob.h"
 #include "badge/leds.h"
+#include "badge/messaging.h"
 #include "badge/power.h"
 #include "badge/ranging.h"
 #include "badge/settings.h"

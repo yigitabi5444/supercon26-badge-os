@@ -63,13 +63,14 @@ void home(void)
         }
         if (!open) continue;
         ESP_LOGI(TAG, "opening %s", apps[sel]->name);
-        ui_wipe(); // the home screen would ghost through the app's first frame
+        os_app(apps[sel], app_infos[sel]);
+        ui_keys(NULL, NULL, NULL, NULL);
+        if (app_infos[sel] && app_infos[sel]->launch_info) os_launch_info();
+        ui_wipe(); // the home/Info screen would ghost through the app's first frame
         ui_close();
         btn_flush();
-        os_app(apps[sel]->name);
-        ui_keys(NULL, NULL, NULL, NULL);
         apps[sel]->run();
-        os_app(NULL);
+        os_app(NULL, NULL);
         ui_keys("< Left", "Right >", "Open", "Open");
         usb_host_lib_info_t usb;
         if (usb_host_lib_info(&usb) == ESP_OK) esp_restart(); // the app made USB a host: home must stay flashable

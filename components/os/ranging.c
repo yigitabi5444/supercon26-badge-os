@@ -111,8 +111,17 @@ static void rng_result(int i, int cm, int64_t now) // under rng_lock: a measurem
     if (!rng[i].seen) rng[i].seen = now;
 }
 
+static bool message_radio_send(const uint8_t peer[6], const uint8_t *data, size_t size)
+{
+    (void)peer; // reuse ranging's public broadcast peer, no second callback or peer table
+    static const uint8_t all[6] = {255,255,255,255,255,255};
+    return rng_run && size <= MSG_PACKET_MAX && esp_now_send(all, data, size) == ESP_OK;
+}
+
 static void rng_recv(const esp_now_recv_info_t *info, const uint8_t *d, int len)
 {
+    if (len <= 0 || !info || !d) return;
+    if (messaging_receive(info->src_addr, d, (size_t)len)) return;
     int64_t now = esp_timer_get_time();
     if (len >= 5 && !memcmp(d, "BOSF", 4)) {
         const rng_fast_t *f = (const void *)d;
@@ -249,16 +258,19 @@ void ranging_start(void)
     memset(rng, 0, sizeof rng);
     esp_log_level_set("wifi", ESP_LOG_ERROR); // the driver warns about every FTM session
     ESP_ERROR_CHECK(esp_now_init());
-    esp_now_register_recv_cb(rng_recv);
-    esp_now_add_peer(&(esp_now_peer_info_t){.peer_addr = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, .channel = RNG_CH,
+    esp_err_t receive_ready = esp_now_register_recv_cb(rng_recv);
+    esp_err_t broadcast_ready = esp_now_add_peer(&(esp_now_peer_info_t){.peer_addr = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, .channel = RNG_CH,
                                             .ifidx = WIFI_IF_STA});
     rng_run = true;
+    messaging_transport(receive_ready == ESP_OK &&
+                        (broadcast_ready == ESP_OK || broadcast_ready == ESP_ERR_ESPNOW_EXIST) ? message_radio_send : NULL);
     xTaskCreate(rng_task, "ranging", 4096, NULL, 4, NULL);
 }
 
 void ranging_stop(void)
 {
     if (!rng_run) return;
+    messaging_transport(NULL); // serialize bounded sends before ESP-NOW deinit/radio takeover
     rng_run = false;
     xSemaphoreTake(rng_done, pdMS_TO_TICKS(5000));
     esp_now_deinit();

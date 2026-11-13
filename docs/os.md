@@ -22,8 +22,9 @@ power, flash) is in [DEVICE_INFO.md](DEVICE_INFO.md).
 ## Boot
 `app_main` (`main/main.c`) runs these in order on the main task (16 KB stack, `CONFIG_ESP_MAIN_TASK_STACK_SIZE`):
 
-1. NVS: Wi-Fi keeps its calibration there, settings live there. Erased and set up again if it is full or from a newer
-   format.
+1. NVS: Wi-Fi calibration, settings and bounded Messages live there. Initialization errors preserve the partition
+   for recovery; Settings/Message writes are disabled instead of automatically erasing saved data. Wi-Fi uses RAM
+   when NVS is unavailable.
 2. `display_init`: the panel's pins, which panel (an OTP probe after power-on, logged as `panel: ...`), SPI (B1
    20 MHz, 84 4 MHz), the panel lock, the restart hook.
 3. `sao_init`: the SAO I2C bus (logs every address that answers), the Cricket, one knob reading in the log.
@@ -31,8 +32,9 @@ power, flash) is in [DEVICE_INFO.md](DEVICE_INFO.md).
 5. `leds_init`: the LED bar off (the LEDs keep their colours through a reset).
 6. `ui_wipe`: the film to a known all-white state, which the display driver needs to start from.
 7. `battery_pct`: one reading before Wi-Fi starts sharing ADC2.
-8. `ranging_start`: other badges' Radar sees this badge from now on.
-9. `home`: the first home screen frame marks this firmware good (`esp_ota_mark_app_valid_cancel_rollback`). A new
+8. `messaging_start`: a nonfatal bounded message service; unknown/full/unavailable storage stays preserved.
+9. `ranging_start`: other badges' Radar sees this badge from now on.
+10. `home`: the first home screen frame marks this firmware good (`esp_ota_mark_app_valid_cancel_rollback`). A new
    version that never gets here is rolled back by the bootloader at the next reset.
 
 ## Tasks
@@ -41,6 +43,7 @@ power, flash) is in [DEVICE_INFO.md](DEVICE_INFO.md).
 | main | 16 KB | 1 | boot, the home screen, and every app's `run()` |
 | buttons | 3 KB | 3 | polls the buttons every 20 ms, MENU + and MENU - held 0.4 s in an app: `esp_restart` |
 | ranging | 4 KB | 4 | ESP-NOW beacons and FTM sessions, while ranging runs |
+| messages | 4 KB | 2 | bounded incoming queue/store synchronization; uses ranging's single radio owner |
 | apps' own | | | draw tasks, network tasks: any task that calls `ui_frame`, `ui_close` or `ui_wipe` needs 6 KB or more |
 
 The panel work runs in the task that calls `ui_frame`, `ui_close` or `ui_wipe`.
@@ -73,6 +76,10 @@ the session opens (it breaks the calm frames). So `ui_frame` costs ~35 ms plus w
 - The restart hook (`esp_register_shutdown_handler`): every `esp_restart` (going home, an app restarting) takes the
   lock, lets the pull in flight finish and closes the session. Never cut the panel off mid-refresh.
 - One mutex around all of it, so apps may draw on several tasks.
+- Optional app Info uses a private PSRAM frame; normal app frames/wipes are suppressed while the card is visible.
+  Runtime Info restores the latest app frame/labels, launch Info is skippable before the existing scene wipe.
+- The top bar samples actual infrastructure-IP readiness and cached unread count on ordinary frames; neither
+  radio activity, ranging nor the phone hotspot means a router connection. No event-driven redraw loop.
 - Never the panel's own slow refresh (~35 s, true black and red): the owner does not want it on the badge.
 
 ## Which module owns what
@@ -102,6 +109,9 @@ the session opens (it breaks the calm frames). So `ui_frame` costs ~35 ms plus w
 - An app done with the network but staying open: `wifi_off()`, then `ranging_start()`.
 - Back home, `home.c` gives the radio back: if ranging is not running, `wifi_off()` and `ranging_start()`.
 - The Settings app runs its own SoftAP and restarts the badge when it is done.
+- Messages shares the existing receive callback/broadcast peer while ranging owns the radio. Its bounded
+  service detaches before a network/phone takeover and attaches when ranging resumes; no second ESP-NOW owner.
+  Names and phone timestamps are unverified, messages are public, and relay is optional (ON for a new store).
 
 ## Back home
 After an app's `run()` returns, `home.c`:

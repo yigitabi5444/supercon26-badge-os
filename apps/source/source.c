@@ -1,4 +1,4 @@
-// Source: a QR code to this firmware's GitHub repo. Any button goes home.
+// Source: a QR code to this firmware's GitHub repo. MENU + opens Info; the other buttons go home.
 #include <string.h>
 #include "badge/badge.h"
 
@@ -46,7 +46,7 @@ static void run(void)
 {
     enum { N = 33, M = 13 }; // modules, px per module: 429 px square
     int x0 = (W - N * M) / 2, y0 = TOP + 48;
-    ui_keys(NULL, NULL, "Home", "Home");
+    ui_keys("Info", NULL, "Home", "Home");
     memset(fb, 0, sizeof fb);
     for (int y = 0; y < N; y++)
         for (int x = 0; x < N; x++)
@@ -54,7 +54,7 @@ static void run(void)
     text((W - (int)strlen(URL) * 16) / 2, y0 + N * M + 40, 2, URL, true);
     ui_frame(1);
     ui_close();
-    btn_get(-1); // any button: home
+    while (btn_get(-1) == BTN_PLUS) ui_info(); // any other button: home
 }
 
 static void icon(int x, int y) // three QR finder squares and some modules
@@ -71,3 +71,6 @@ static void icon(int x, int y) // three QR finder squares and some modules
 }
 
 const app_t app_source = {"Source", icon, run};
+const app_info_t app_source_info = {
+    "Scan the QR code to open this firmware's source repository.",
+    "Code: apps/source/source.c", false};

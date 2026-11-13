@@ -14,6 +14,10 @@
 #define WIFI_PASS ""
 #endif
 
+static bool storage_ready;
+void cfg_storage_init(bool ready) { storage_ready = ready; }
+bool cfg_storage_ready(void) { return storage_ready; }
+
 #define IMG_ADDR 0x630000
 #define IMG_MAGIC 0x31474D49 // "IMG1", written last: a cut-off write reads as no picture
 
@@ -21,7 +25,7 @@ int cfg_get(const char *key, char *out, int n)
 {
     nvs_handle_t h;
     size_t len = n;
-    if (nvs_open("cfg", NVS_READONLY, &h) == ESP_OK) {
+    if (storage_ready && nvs_open("cfg", NVS_READONLY, &h) == ESP_OK) {
         esp_err_t e = nvs_get_str(h, key, out, &len);
         nvs_close(h);
         if (e == ESP_OK) return strlen(out);
@@ -36,7 +40,7 @@ int cfg_get(const char *key, char *out, int n)
 bool cfg_set(const char *key, const char *val)
 {
     nvs_handle_t h;
-    if (nvs_open("cfg", NVS_READWRITE, &h) != ESP_OK) return false;
+    if (!storage_ready || nvs_open("cfg", NVS_READWRITE, &h) != ESP_OK) return false;
     esp_err_t e = val ? nvs_set_str(h, key, val) : nvs_erase_key(h, key);
     if (e == ESP_ERR_NVS_NOT_FOUND) e = ESP_OK;
     if (e == ESP_OK) e = nvs_commit(h);
@@ -53,6 +57,7 @@ bool cfg_get_image(uint8_t *img)
 
 bool cfg_set_image(const uint8_t *img)
 {
+    if (!storage_ready) return false;
     if (esp_flash_erase_region(NULL, IMG_ADDR, (4 + IMG_BYTES + 4095) & ~4095) != ESP_OK) return false;
     uint32_t magic = IMG_MAGIC;
     return !img || (esp_flash_write(NULL, img, IMG_ADDR + 4, IMG_BYTES) == ESP_OK &&

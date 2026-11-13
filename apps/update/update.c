@@ -234,3 +234,6 @@ static void icon(int x, int y) // download arrow into a tray
 }
 
 const app_t app_update = {"Update", icon, run};
+const app_info_t app_update_info = {
+    "Update this badge online, flash a partner over USB-C, or update a Cricket speaker.",
+    "Code: apps/update/update.c + ota.c", true};
