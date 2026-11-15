@@ -17,7 +17,7 @@ Only one program may use the serial port; stop esptool/serial consoles first.
 From the repository root, start the live collector in one terminal:
 
 ```sh
-python3 collector.py --all-panes --flash-on-ready
+python3 tools/codex_board/collector.py --all-panes --flash-on-ready
 ```
 
 Use a Python environment containing pyserial for the sender. Activate your
