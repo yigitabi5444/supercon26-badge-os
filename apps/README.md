@@ -42,6 +42,10 @@ static void icon(int x, int y) // ICON x ICON px at (x, y): white on the black b
 
 const app_t app_hello = {"Hello", icon, run};
 ```
+Optional `app_info_t` metadata supplies `.info` (purpose), `.credit` (verified source) and `.launch_info = true`
+when every button is occupied; register its pointer in `main/apps.c` alongside the unchanged app descriptor. A free button labeled Info may call `ui_info()`; preserve the app's timer/drawer
+behavior across the modal card. Use `ui_info_until(&saved)` when a background save must dismiss it.
+
 Then add it to `main/apps.c`: one `extern` and one line in `apps[]`, where it should sit on the home screen.
 
 ## The rules

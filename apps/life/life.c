@@ -1,6 +1,6 @@
 // Conway's Game of Life: 60 x 39 = 2340 cells of 16 px below the top bar, edges wrap around. Nobody plays: a random
 // soup runs one generation per frame (~0.27 s) until it dies out, settles (same as 1 or 2 generations ago) or hits
-// MAX_GEN, then a fresh soup starts after a wipe. Any button goes home.
+// MAX_GEN, then a fresh soup starts after a wipe. MENU + opens Info; the other buttons go home.
 #include <string.h>
 #include "esp_random.h"
 #include "badge/badge.h"
@@ -28,7 +28,7 @@ static void step(void)
 
 static void run(void)
 {
-    ui_keys(NULL, NULL, "Home", "Home");
+    ui_keys("Info", NULL, "Home", "Home");
     for (;;) {
         for (int y = 0; y < GH; y++)
             for (int x = 0; x < GW; x++) g[0][y][x] = esp_random() % 100 < 30; // 30 % alive
@@ -38,7 +38,9 @@ static void run(void)
                 for (int x = 0; x < GW; x++)
                     if (g[0][y][x]) box(x * CELL + 1, TOP + y * CELL + 1, CELL - 2, CELL - 2, true);
             ui_frame(1);
-            if (btn_get(0) >= 0) return;
+            int b = btn_get(0);
+            if (b == BTN_PLUS) ui_info();
+            else if (b >= 0) return;
             step();
             if (!memcmp(g[0], g[1], sizeof g[0]) || !memcmp(g[0], g[2], sizeof g[0])) break; // still or blinking
         }
@@ -55,3 +57,6 @@ static void icon(int x, int y) // a glider
 }
 
 const app_t app_life = {"Life", icon, run};
+const app_info_t app_life_info = {
+    "Conway's Game of Life: watch a random pattern evolve, then start again.",
+    "Code: apps/life/life.c", false};

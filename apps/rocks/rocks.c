@@ -285,3 +285,6 @@ static void icon(int x, int y) // a little ship among rocks
 }
 
 const app_t app_rocks = {"Asteroids", icon, run};
+const app_info_t app_rocks_info = {
+    "Turn, thrust and fire to break drifting rocks.",
+    "Code: apps/rocks/rocks.c", true};

@@ -3,7 +3,9 @@
 // the event Wi-Fi. cfg_set(key, NULL) deletes. Keys:
 //   "name"        username, <= 12 chars: top bar, Radar, ranging beacons
 //   "ssid" "pass" the Wi-Fi wifi_connect joins
-//   "badge_text"  the Badge app's text (lines split by '\n'), also the Clock's name column
+//   "badge_subject" (<=256), "badge_body" (<=1000): split Badge text, ASCII with line breaks/tabs
+//   "badge_text"  legacy single field (<=1000; stock renders <=255), also the Clock's name column
+//   "badge_legacy" last legacy snapshot, detecting edits by older firmware; reads never migrate
 //   "tz"          Clock: a POSIX TZ string, e.g. "EST5EDT,M3.2.0,M11.1.0"; unset = US Pacific
 //   "wx_city"     Weather: a place name as typed, e.g. "Istanbul"; the app looks it up online (Open-Meteo geocoding)
 //   "wx_lat" "wx_lon" Weather: decimal degrees as text; default Pasadena when unset
@@ -18,6 +20,7 @@
 
 int cfg_get(const char *key, char *out, int n);
 bool cfg_set(const char *key, const char *val);
+bool cfg_storage_ready(void); // false: preserve unavailable NVS, disable writes
 
 // The Badge app's picture: W x (H - TOP) pixels, 1 bit, same layout as fb (1 = black), IMG_BYTES bytes. Raw in
 // flash at 0x630000 (by address: badges updated over the air keep their old partition table).

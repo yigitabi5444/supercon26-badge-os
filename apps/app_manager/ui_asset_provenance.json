@@ -1,0 +1,84 @@
+{
+  "icon-codex_board": {
+    "source_png_sha256": "7137e9200547f5336347cc8d7866b4b7c4078cbddcf080bcc26598d198824956",
+    "packed_sha256": "c5e6e1c328466304993d2688ec894ee8463b2bbc7ee69b30ea014cb666e2ae48",
+    "size": [
+      32,
+      32
+    ]
+  },
+  "icon-messaging": {
+    "source_png_sha256": "8905b55c96f59239215cb4c70b98cf1314e3c85f29ee176a6075b9a1be91c652",
+    "packed_sha256": "6c15731d1b198b49ec6e79220f41dd2bd313ff25e0aa285d15bfa86073d36550",
+    "size": [
+      32,
+      32
+    ]
+  },
+  "icon-doom": {
+    "source_png_sha256": "2aea4d6c90f96affcde26a2a69b8993c42c323e034920d3b270ca08a8046150c",
+    "packed_sha256": "992f1c4bd1dffe65e8b90943df0ceff34b61f8264949883d1db47c0b7275c43c",
+    "size": [
+      32,
+      32
+    ]
+  },
+  "icon-aliens": {
+    "source_png_sha256": "8dbc88f6f2492ee12673f65563b9187d4fd38deaabb17cc76548d5fe1ff33e14",
+    "packed_sha256": "8ab4c8f8e4e4dce9130f362483c45425a7bc3e3c9a9e1301786349e9b920ec6b",
+    "size": [
+      32,
+      32
+    ]
+  },
+  "icon-rocks": {
+    "source_png_sha256": "b6aba9228d5b3caf2c8e4b9e2ce58315614ca656cece8709cf68fd2561f19f54",
+    "packed_sha256": "8a99a0516fe83930be2e98201136ccd52bd6de25c9060be07984339c57352819",
+    "size": [
+      32,
+      32
+    ]
+  },
+  "icon-hackaday": {
+    "source_png_sha256": "d189d07b9554bec587a40a887b41fb05647c529bfb06a8cd3f96bf836db90f31",
+    "packed_sha256": "6b6f9698be90746d6054d46cc672568f320a2354022928c05941531e15c85484",
+    "size": [
+      32,
+      32
+    ]
+  },
+  "icon-video": {
+    "source_png_sha256": "63e70077a54b1767d499d6670b94dfe120ea10259a19353c8ef774fccd9c2cbb",
+    "packed_sha256": "7414f6fd9128106558139555a8031d247ae9276e7c4636467ec14ddb5a066ab6",
+    "size": [
+      32,
+      32
+    ]
+  },
+  "codex-board-demo": {
+    "source_png_sha256": "a393f885d662455dca35e8d16174246a6a050cf9c2096dd7225b05980d286817",
+    "packed_sha256": "2f5d0b0abec93bcb9671b985eaf175fea565ad3ed156918390689ef1a8033cb8",
+    "size": [
+      160,
+      112
+    ]
+  },
+  "messaging-screenshot": {
+    "source_png_sha256": "6062c5ac9a50957c138c675d1cf604f8227a43983674bb6711594b237cd2898e",
+    "packed_sha256": "a4c1091501cd3899562e581044d74775874a6af7d4654fbcb6d1c4371fa500c2",
+    "size": [
+      160,
+      112
+    ]
+  },
+  "spaceinv-v1-source-render": {
+    "source_png_sha256": "38c8f21b59e2ef6500fe88c6b819c2327975efe89703e3de6e7bbd62105c6c5d",
+    "packed_sha256": "714a7cb8d83324a79112e3bfee7739eed43edaa065b976bcc90e3045a9c2972f",
+    "size": [
+      160,
+      112
+    ],
+    "module_source_commit": "60f15469d5348697da9ef5995568ee103973a9d6",
+    "scope": "Actual module software render, not a hardware screenshot."
+  }
+}

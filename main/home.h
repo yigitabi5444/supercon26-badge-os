@@ -3,5 +3,6 @@
 #include "badge/app.h"
 
 extern const app_t *const apps[];
+extern const app_info_t *const app_infos[];
 extern const int napps;
 void home(void); // never returns

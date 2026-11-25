@@ -2,6 +2,7 @@
 // Apps include badge/badge.h, never this.
 #pragma once
 #include <stdbool.h>
+#include "badge/app.h"
 
 // Boot (main/main.c), in this order.
 void display_init(void); // panel pins and SPI, the panel lock, the restart hook that lets the panel finish
@@ -10,7 +11,9 @@ void buttons_init(void); // the 20 ms polling task
 void leds_init(void);    // all off: they still show whatever ran before the reset
 
 // The home screen (main/home.c).
-void os_app(const char *name); // an app starts: its name in the top bar, MENU+/- go home; NULL = back home
+void cfg_storage_init(bool ready); // boot NVS result; never auto-erase existing data
+void os_launch_info(void); // three-second card before the normal app-entry wipe
+void os_app(const app_t *app, const app_info_t *info); // an app starts: its name in the top bar, MENU+/- go home; NULL = back home
 bool ranging_running(void);
 
 // Shared by the OS modules.

@@ -1,4 +1,37 @@
 dependencies:
+  espressif/cmake_utilities:
+    component_hash: 351350613ceafba240b761b4ea991e0f231ac7a9f59a9ee901f751bddc0bb18f
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=4.1'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 0.5.3
+  espressif/elf_loader:
+    component_hash: fdd946751b18002ea8dffc1768ce835b78c5a8f36476e9cbbc59e527ff038be1
+    dependencies:
+    - name: espressif/cmake_utilities
+      registry_url: https://components.espressif.com
+      require: private
+      version: 0.*
+    - name: idf
+      require: private
+      version: '>=4.4.3'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    targets:
+    - esp32
+    - esp32s2
+    - esp32s3
+    - esp32s31
+    - esp32c5
+    - esp32c6
+    - esp32c61
+    - esp32p4
+    version: 2.1.0
   espressif/esp-serial-flasher:
     component_hash: 086e340d6f1e923d6934898186b5f718cfc614e480980f66ef0f3bc3522e1ace
     dependencies:
@@ -101,10 +134,23 @@ dependencies:
     source:
       type: idf
     version: 6.0.2
+  joltwallet/littlefs:
+    component_hash: e1a0f4a6adf821759cb34703a91107bbdce5d7ff6f4728f40ab012bb87842974
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.23.1
 direct_dependencies:
+- espressif/elf_loader
 - espressif/esp-serial-flasher
 - espressif/qrcode
 - espressif/usb_host_cdc_acm
-manifest_hash: ba80b28658f305d7c7f06e51c85d0f4ffb08db18fdb5ef52779905b926467339
+- idf
+- joltwallet/littlefs
+manifest_hash: a2272fad896011011734fd654b6beb2421cd9983b24b21c285df3a40eba1f690
 target: esp32s3
 version: 3.0.0

@@ -1,0 +1,10 @@
+# Fresh Core14 provisioning only; app-only OTA retains the device's existing table.
+# Name,   Type, SubType, Offset,   Size
+nvs,      data, nvs,     0x9000,   0x6000
+otadata,  data, ota,     0xf000,   0x2000
+ota_0,    app,  ota_0,   0x20000,  0x1d0000
+ota_1,    app,  ota_1,   0x1f0000, 0x1d0000
+appstore, data, littlefs,0x3c0000, 0x260000
+coredump, data, coredump,0x620000, 0x10000
+img,      data, 0x40,    0x630000, 0x20000
+doom,     data, 0x41,    0x650000, 0x1b0000

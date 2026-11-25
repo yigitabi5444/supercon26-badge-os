@@ -1,0 +1,16 @@
+menu "App Manager"
+
+config BADGE_APP_MANAGER_FRESH_LAYOUT
+    bool "Use fresh-install App Manager layout"
+    default n
+    help
+        Enable only with the matching fresh-install partition table.
+        Existing layouts are not migrated or formatted by App Manager.
+
+config BADGE_APP_MANAGER_HELP
+    bool "Register extended launcher help"
+    default n
+    help
+        Select only with a launcher that supports app_info_t metadata.
+
+endmenu

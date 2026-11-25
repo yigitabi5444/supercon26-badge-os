@@ -19,7 +19,7 @@ jobs:
         with:
           esp_idf_version: v6.0.2
           target: esp32s3
-          command: idf.py build merge-bin -o badge_os_full.bin
+          command: idf.py -DBADGE_APP_MANAGER=OFF build merge-bin -o badge_os_full.bin
       - uses: softprops/action-gh-release@v2
         with:
           files: |

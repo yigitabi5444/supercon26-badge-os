@@ -1,0 +1,12 @@
+# App-owned input for Testing Manager's separately frozen target integration.
+# Append to the existing Core + restricted-loader defaults; no root config is edited.
+CONFIG_LITTLEFS_MAX_PARTITIONS=1
+CONFIG_LITTLEFS_OBJ_NAME_LEN=80
+# CONFIG_LITTLEFS_USE_MTIME is not set
+# CONFIG_LITTLEFS_EXPOSE_RAW_API is not set
+# CONFIG_LITTLEFS_SDMMC_SUPPORT is not set
+# CONFIG_LITTLEFS_SPIFFS_COMPAT is not set
+# CONFIG_LITTLEFS_FLUSH_FILE_EVERY_WRITE is not set
+# CONFIG_LITTLEFS_USE_ONLY_HASH is not set
+# CONFIG_LITTLEFS_MMAP_PARTITION is not set
+CONFIG_VFS_SUPPORT_DIR=y

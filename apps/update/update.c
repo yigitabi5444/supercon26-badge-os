@@ -19,6 +19,7 @@
 #include "usb/usb_host.h"
 #include "badge/badge.h"
 #include "cricket.h"
+#include "update_layout.h"
 
 void online_update(void); // ota.c
 
@@ -53,6 +54,7 @@ static bool copy(esp_loader_t *ld, uint32_t src, uint32_t dst, uint32_t len, uin
 // One try: wait for a badge (until stop), copy, report in pct.
 static void update_task(void *arg)
 {
+    if (!update_layout_local_legacy()) { pct = -4; vTaskDelete(NULL); return; }
     static esp32_usb_cdc_acm_port_t port; // outlives the loader; VID/PID 0 = any CDC device
     port = (esp32_usb_cdc_acm_port_t){.port.ops = &esp32_usb_cdc_acm_ops, .connection_timeout_ms = 1000,
                                       .out_buffer_size = 4096};
@@ -70,6 +72,15 @@ static void update_task(void *arg)
     uint32_t done = 0, total = 0x8000 + 0x1000 + img.image_len;
     esp_loader_connect_args_t args = ESP_LOADER_CONNECT_DEFAULT();
     ok = ok && esp_loader_connect(&ld, &args) == ESP_LOADER_SUCCESS;
+    if (ok) {
+        bool compatible = update_layout_peer_legacy(&ld);
+        if (stop || !compatible) { // Home can arrive while the peer table is read.
+            esp_loader_deinit(&ld);
+            pct = stop ? -3 : -4;
+            vTaskDelete(NULL);
+            return;
+        }
+    }
     if (ok) pct = 0;
     // Our app goes to the target's ota_0 whichever slot runs here; erased otadata makes the target boot ota_0.
     ok = ok && copy(&ld, 0x0, 0x0, 0x8000, &done, total) &&         // bootloader
@@ -113,6 +124,14 @@ static void progress(const char *title, const char *line, int p, const char *not
 
 static void wired(void)
 {
+    // Refuse locally before taking the USB PHY; the task also checks the receiver before writes.
+    if (!update_layout_local_legacy()) {
+        ui_keys("Back", "Back", "Back", "Back");
+        message("Wired update", "Not supported", "Use an approved computer update.");
+        btn_flush();
+        btn_get(-1);
+        return;
+    }
     // usb_host_install takes the PHY from USB-Serial-JTAG until reboot, so this app never returns: it restarts.
     usb_host_install(&(usb_host_config_t){.intr_flags = ESP_INTR_FLAG_LEVEL1});
     xTaskCreate(usb_lib_task, "usb_lib", 4096, NULL, 20, NULL);
@@ -148,6 +167,13 @@ static void wired(void)
             shown = p;
         }
         ui_close();
+        if (pct == -4) {
+            ui_keys("Home", "Home", "Home", "Home");
+            message("Wired update", "Not supported", "Use an approved computer update.");
+            btn_flush();
+            btn_get(-1);
+            esp_restart(); // USB host already owns the PHY; return it to the console.
+        }
         if (pct == 101) {
             message("Wired update", "Done", NULL);
             ms(3000);
@@ -214,7 +240,7 @@ static void run(void)
         }
         ui_close();
         btn_flush();
-        if (sel == 1) wired(); // never returns
+        if (sel == 1) { wired(); return; } // refusal can return before USB host starts
         if (sel == 2) {
             cricket();
             shown = -1;
@@ -234,3 +260,6 @@ static void icon(int x, int y) // download arrow into a tray
 }
 
 const app_t app_update = {"Update", icon, run};
+const app_info_t app_update_info = {
+    "Update this badge online, flash a partner over USB-C, or update a Cricket speaker.",
+    "Code: apps/update/update.c + ota.c", true};

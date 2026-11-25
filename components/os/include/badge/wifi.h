@@ -6,4 +6,5 @@
 
 void wifi_on(void);                // radio on, station mode, no network joined (ESP-NOW apps: set the channel next)
 bool wifi_connect(int timeout_ms); // wifi_on + join the saved Wi-Fi ("ssid"/"pass"); true once there is an IP
+bool wifi_connected(void);         // actual infrastructure IP; ranging/SoftAP do not count
 void wifi_off(void);               // radio off

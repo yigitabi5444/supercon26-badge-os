@@ -21,6 +21,10 @@ Apps take over the badge; hold MENU + and MENU - together to get back home.
 - **Add-ons**: an AS5600 magnetic knob on an SAO port as a controller, a Noisy Cricket SAO as the speaker.
 
 ## Apps
+The default Core14 build contains Badge, Clock, Clock Faces, Update, Pong, Snake, Life, Tetris, Radar,
+Source, Weather, Settings, FAQ and App Manager. Installable apps start absent and appear on Home only after a
+verified installation. A user-supplied signed package channel is required; none is enabled by default.
+
 | App | What it does |
 |---|---|
 | Badge | Name tag: "HELLO my name is", or your own text or picture from Settings |
@@ -29,15 +33,20 @@ Apps take over the badge; hold MENU + and MENU - together to get back home.
 | Pong | Two-badge Pong over ESP-NOW, buttons or knob |
 | Snake | Nonstop snake with wrap-around walls |
 | Life | Conway's Game of Life, 2340 cells, runs by itself |
-| SpaceInv, Tetris, Asteroids | Single-player arcade games: descending aliens, falling blocks, drifting rocks |
+| Tetris | Falling blocks |
+| SpaceInv, Asteroids (installable) | Descending aliens and drifting rocks |
 | Radar | Nearby badges running badge os, with distances, and a map once 3+ badges are in range |
 | Source | A QR code to this repo |
-| Hackaday | Hackaday's latest posts with their images, one per screen; open one to read it |
-| Video | A 15 s clip at 4 frames/s, to show off the panel |
+| Hackaday (installable) | Hackaday's latest posts with their images, one per screen; open one to read it |
+| Video (installable) | A 15 s clip at 4 frames/s, to show off the panel |
 | Weather | Current weather and a 5-day forecast (Open-Meteo) for a saved city or coordinates |
 | Settings | Opens a Wi-Fi hotspot "Badge-XXXX" (password `supercon`) with a settings page: username, Wi-Fi, Badge text or picture, weather place and units |
-| Codex Board | Desk display for Codex terminal sessions: working, reply ready, needs input, quota; red LEDs on attention. Feed from `tools/codex_board` over USB or Wi-Fi ([apps/codex_board/README.md](apps/codex_board/README.md)) |
-| Doom | The shareware episode, downloaded once into flash |
+| Codex Board (installable) | Desk display for Codex terminal sessions: working, reply ready, needs input, quota; red LEDs on attention. Feed from `tools/codex_board` over USB or Wi-Fi ([apps/codex_board/README.md](apps/codex_board/README.md)) |
+| Doom (installable) | The shareware episode, downloaded once into flash |
+| Messages (installable) | Phone-composed badge threads, replies and unread markers |
+| FAQ | Offline help topics |
+| Clock Faces | Digital and analog everyday clock faces |
+| App Manager | Install, open, update and uninstall signed apps |
 
 ## Controls
 The four buttons sit two in each top corner: MENU + above A on the left, MENU - above B on the right. The top bar
@@ -62,14 +71,26 @@ and flash it at 0x0:
 esptool --chip esp32s3 -p /dev/cu.usbmodem101 write-flash 0x0 badge_os_full.bin
 ```
 A badge running the stock MicroPython firmware has to be put into download mode first: hold BOOT, tap RESET.
-After that, use Update -> Online update, or flash other badges from one badge with Update -> Flash another badge.
+After that, use Update -> Online update. Update -> Flash another badge accepts only recognized legacy partition
+tables; a stock MicroPython or unknown-layout receiver needs host provisioning.
 
 ## Build
-ESP-IDF 6.0 (tested with v6.0.2):
+ESP-IDF 6.0.2. Use separate build/config directories for the two profiles:
 ```sh
-idf.py build
-idf.py -p /dev/cu.usbmodem101 flash
+# Core14 and its separate fresh-provisioning layout
+idf.py -B build/core -DSDKCONFIG=build/core/sdkconfig build
+# Legacy registry/layout, also used by the release workflow
+idf.py -B build/legacy -DSDKCONFIG=build/legacy/sdkconfig -DBADGE_APP_MANAGER=OFF build
 ```
+Core14 provisioning and package-channel setup are described in [App Manager](apps/app_manager/README.md).
+An app-only OTA update retains the device's old partition table; it does not create or migrate an app store.
+The generated empty `appstore.bin` is excluded from ordinary flash/update arguments. On a blank badge only
+(the following erases the app store), use the separate Core14 build/config path:
+```sh
+idf.py -B build/core -DSDKCONFIG=build/core/sdkconfig -p PORT flash appstore-flash
+```
+Existing stores need the same APP public key to open their installed packages.
+
 Online update needs Wi-Fi credentials at build time in `main/wifi_secret.h` (gitignored):
 ```c
 #define WIFI_SSID "your-network"
@@ -77,7 +98,7 @@ Online update needs Wi-Fi credentials at build time in `main/wifi_secret.h` (git
 ```
 Without the file everything else works, and Online update says it has no Wi-Fi.
 
-Releases: pushing a `v*` tag runs `.github/workflows/release.yml`, which builds that version and attaches
+Releases: pushing a `v*` tag runs `.github/workflows/release.yml`, which explicitly builds the legacy profile and attaches
 `badge_os.bin` (what Online update downloads) and `badge_os_full.bin` to the GitHub release.
 
 ## License

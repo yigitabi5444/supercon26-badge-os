@@ -8,6 +8,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "esp_crt_bundle.h"
 #include "esp_heap_caps.h"
 #include "esp_http_client.h"
@@ -29,6 +30,7 @@ typedef struct {
 static wx_t wx;              // the main task writes, the draw task copies under lock
 static portMUX_TYPE lock = portMUX_INITIALIZER_UNLOCKED;
 static TaskHandle_t drawer;
+static SemaphoreHandle_t panel; // keep drawer/wipe out of modal Info
 static char lat[16], lon[16], place[64], city[48];
 static bool fahr;
 static int date_hm = -1;     // minutes since UTC midnight, from the reply's Date header
@@ -324,6 +326,7 @@ static void draw_task(void *arg)
 {
     int gen = 0;
     for (;;) {
+        xSemaphoreTake(panel, portMAX_DELAY);
         wx_t w;
         taskENTER_CRITICAL(&lock);
         w = wx;
@@ -332,6 +335,7 @@ static void draw_task(void *arg)
         gen = w.gen;
         draw(&w);
         ui_frame(1);
+        xSemaphoreGive(panel);
         if (!ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(3000))) ui_close(), ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     }
 }
@@ -344,14 +348,22 @@ static void run(void) // never returns (home is MENU + and MENU -); the home tas
     else if (!*lat) strcpy(lat, "34.1478"), strcpy(lon, "-118.1445"), strcpy(place, "Pasadena, US"); // Supercon
     cfg_get("wx_unit", u, sizeof u);
     fahr = *u == 'F' || *u == 'f';
-    ui_keys(NULL, NULL, NULL, "Refresh");
+    ui_keys("Info", NULL, NULL, "Refresh");
+    panel = xSemaphoreCreateMutex();
     xTaskCreate(draw_task, "wx draw", 6144, NULL, 4, &drawer);
     for (;;) {
         fetch(buf);
         int64_t due = esp_timer_get_time() + EVERY_US;
         btn_flush();
-        while (esp_timer_get_time() < due)
-            if (btn_get((due - esp_timer_get_time()) / 1000 + 1) == BTN_B) break;
+        while (esp_timer_get_time() < due) {
+            int b = btn_get((due - esp_timer_get_time()) / 1000 + 1);
+            if (b == BTN_B) break;
+            if (b == BTN_PLUS) {
+                xSemaphoreTake(panel, portMAX_DELAY);
+                ui_info();
+                xSemaphoreGive(panel);
+            }
+        }
     }
 }
 
@@ -367,3 +379,6 @@ static void icon(int x, int y) // a sun behind a cloud
 }
 
 const app_t app_weather = {"Weather", icon, run};
+const app_info_t app_weather_info = {
+    "Current weather and a 5-day forecast for the place saved in Settings. Requires Wi-Fi.",
+    "Data: Open-Meteo. Code: apps/weather/weather.c", false};

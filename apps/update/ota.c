@@ -13,6 +13,7 @@
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "badge/badge.h"
+#include "update_layout.h"
 
 #define URL "https://github.com/yigitabi5444/supercon26-badge-os/releases/latest/download/badge_os.bin"
 
@@ -124,6 +125,9 @@ static void run(void)
     say(6, "Online update");
     snprintf(s, sizeof s, "This badge: v%s", ours);
     say(3, s);
+    // Version-only releases cannot authorize a store/unknown-layout update.
+    if (!update_layout_local_legacy())
+        return done("Update unavailable.", "Use an approved computer update.");
     say(4, "Checking for updates...");
 
     t0 = esp_timer_get_time();

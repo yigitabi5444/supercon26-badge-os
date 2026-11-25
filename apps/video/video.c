@@ -17,7 +17,7 @@ static void run(void)
     static EXT_RAM_BSS_ATTR uint8_t img[W / 8 * (H - TOP)];
     int w = u16(vid + 4), h = u16(vid + 6), n = u16(vid + 8), fps = u16(vid + 10), rb = w / 8;
     if (memcmp(vid, "VID2", 4) || w > W || h > H - TOP) return;
-    ui_keys(NULL, NULL, "Restart", "Home");
+    ui_keys("Info", NULL, "Restart", "Home");
     for (;;) {
         ui_wipe();
         const uint8_t *p = vid + 12;
@@ -36,6 +36,12 @@ static void run(void)
             ui_frame(1);
             shown++;
             b = btn_get(0);
+            if (b == BTN_PLUS) {
+                int64_t paused_at = esp_timer_get_time();
+                ui_info();
+                t0 += esp_timer_get_time() - paused_at;
+                b = -1;
+            }
         }
         ESP_LOGI("video", "%d of %d frames shown in %d ms", shown, n, (int)((esp_timer_get_time() - t0) / 1000));
         if (b == BTN_B) {
@@ -53,3 +59,6 @@ static void icon(int x, int y) // a play button on a screen
 }
 
 const app_t app_video = {"Video", icon, run};
+const app_info_t app_video_info = {
+    "Play a short monochrome clip. A restarts, B goes Home, and Info pauses playback.",
+    "Code: apps/video/video.c; clip: apps/video/tools", false};
